@@ -1,0 +1,27 @@
+.app-layout {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #f5f6fa;
+}
+
+.main-section {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.content-area {
+  display: flex;
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Reset some defaults */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+} 
