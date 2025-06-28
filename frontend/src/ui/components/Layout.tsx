@@ -14,8 +14,10 @@ export interface EnhancedChart extends Chart {
 
 // Define Layout component function for application structure
 const Layout: React.FC = () => {
-  // Initialize isDataBrowserPinned state with false for browser visibility
-  const [isDataBrowserPinned, setIsDataBrowserPinned] = useState(false);
+  // Initialize sidebar states
+  const [isChartsSidebarOpen, setIsChartsSidebarOpen] = useState(true);
+  const [isDataBrowserOpen, setIsDataBrowserOpen] = useState(false);
+  
   // Initialize charts state with empty array for chart collection
   const [charts, setCharts] = useState<EnhancedChart[]>([]);
   // Initialize libraries state with empty array for library collection
@@ -64,6 +66,30 @@ const Layout: React.FC = () => {
         chart.id === id ? { ...chart, ...updates } : chart
       )
     );
+  };
+
+  // Define handleReorderCharts function for drag-and-drop chart repositioning
+  const handleReorderCharts = (draggedChartId: string, targetChartId: string) => {
+    if (!activeLibraryId || draggedChartId === targetChartId) return;
+    
+    setCharts(prevCharts => {
+      // Only reorder charts within the active library
+      const libraryCharts = prevCharts.filter(chart => chart.libraryId === activeLibraryId);
+      const otherCharts = prevCharts.filter(chart => chart.libraryId !== activeLibraryId);
+      
+      const draggedIndex = libraryCharts.findIndex(chart => chart.id === draggedChartId);
+      const targetIndex = libraryCharts.findIndex(chart => chart.id === targetChartId);
+      
+      if (draggedIndex === -1 || targetIndex === -1) return prevCharts;
+      
+      // Create new array with reordered charts
+      const reorderedCharts = [...libraryCharts];
+      const [draggedChart] = reorderedCharts.splice(draggedIndex, 1);
+      reorderedCharts.splice(targetIndex, 0, draggedChart);
+      
+      // Combine with charts from other libraries
+      return [...otherCharts, ...reorderedCharts];
+    });
   };
 
   // Define handleAddLibrary function for creating new libraries
@@ -127,16 +153,36 @@ const Layout: React.FC = () => {
   // Render Layout component JSX structure
   return (
     <div className="app-layout">
-      <ChartsSidebar 
-        isExpanded={true}
-        onToggle={() => {}}
-        libraries={libraries}
-        activeLibraryId={activeLibraryId}
-        onLibrarySelect={handleLibrarySelect}
-        onAddLibrary={handleAddLibrary}
-        onDeleteLibrary={handleDeleteLibrary}
-        getChartCount={getChartCount}
-      />
+      {/* Left Sidebar - Charts Library */}
+      <div className={`left-sidebar ${isChartsSidebarOpen ? 'open' : 'collapsed'}`}>
+        <ChartsSidebar 
+          isExpanded={isChartsSidebarOpen}
+          onToggle={() => setIsChartsSidebarOpen(false)}
+          libraries={libraries}
+          activeLibraryId={activeLibraryId}
+          onLibrarySelect={handleLibrarySelect}
+          onAddLibrary={handleAddLibrary}
+          onDeleteLibrary={handleDeleteLibrary}
+          getChartCount={getChartCount}
+        />
+        <div 
+          className={`sidebar-trigger left ${!isChartsSidebarOpen ? 'visible' : 'hidden'}`} 
+          onClick={() => setIsChartsSidebarOpen(true)}
+        >
+          <div className="trigger-icon">→</div>
+          <div className="trigger-label">Charts</div>
+        </div>
+        {/* Centered Toggle Arrow */}
+        <button 
+          className="sidebar-center-toggle left"
+          onClick={() => setIsChartsSidebarOpen(!isChartsSidebarOpen)}
+          title={isChartsSidebarOpen ? "Collapse Charts Library" : "Expand Charts Library"}
+        >
+          {isChartsSidebarOpen ? '◀' : '▶'}
+        </button>
+      </div>
+
+      {/* Main Content Area */}
       <div className="main-section">
         <Header 
           onAddChart={handleAddChart}
@@ -148,15 +194,35 @@ const Layout: React.FC = () => {
             charts={activeLibraryCharts} 
             onRemoveChart={handleRemoveChart}
             onUpdateChart={handleUpdateChart}
+            onReorderCharts={handleReorderCharts}
             activeLibraryName={activeLibraryId ? libraries.find(lib => lib.id === activeLibraryId)?.name : undefined}
             hasLibraries={libraries.length > 0}
             gridSize={gridSize}
           />
-          <DataBrowser 
-            isPinned={isDataBrowserPinned}
-            onPinToggle={() => setIsDataBrowserPinned(!isDataBrowserPinned)}
-          />
         </div>
+      </div>
+
+      {/* Right Sidebar - Data Browser */}
+      <div className={`right-sidebar ${isDataBrowserOpen ? 'open' : 'collapsed'}`}>
+        {isDataBrowserOpen ? (
+          <DataBrowser 
+            isPinned={true}
+            onPinToggle={() => setIsDataBrowserOpen(false)}
+          />
+        ) : (
+          <div className="sidebar-trigger right" onClick={() => setIsDataBrowserOpen(true)}>
+            <div className="trigger-icon">←</div>
+            <div className="trigger-label">Data</div>
+          </div>
+        )}
+        {/* Centered Toggle Arrow */}
+        <button 
+          className="sidebar-center-toggle right"
+          onClick={() => setIsDataBrowserOpen(!isDataBrowserOpen)}
+          title={isDataBrowserOpen ? "Collapse Data Browser" : "Expand Data Browser"}
+        >
+          {isDataBrowserOpen ? '▶' : '◀'}
+        </button>
       </div>
     </div>
   );

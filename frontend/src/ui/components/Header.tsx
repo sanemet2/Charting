@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import './Header.css';
 
 // Define GridSize type with specific grid layout options
-type GridSize = '2x2' | '3x3' | '4x4' | '5x5';
+type GridSize = '1x1' | '2x2' | '3x3' | '4x4' | '5x5';
 
 // Define HeaderProps interface for component properties
 interface HeaderProps {
@@ -17,7 +17,11 @@ interface HeaderProps {
 }
 
 // Define Header component function with props destructuring
-const Header: React.FC<HeaderProps> = ({ onAddChart, gridSize, onGridSizeChange }) => {
+const Header: React.FC<HeaderProps> = ({ 
+  onAddChart, 
+  gridSize, 
+  onGridSizeChange
+}) => {
   // Initialize showNewChartMenu state with false for dropdown visibility
   const [showNewChartMenu, setShowNewChartMenu] = useState(false);
   // Initialize showGridMenu state with false for grid dropdown visibility
@@ -65,12 +69,22 @@ const Header: React.FC<HeaderProps> = ({ onAddChart, gridSize, onGridSizeChange 
           <button 
             className="header-button"
             onClick={() => setShowGridMenu(!showGridMenu)}
-            title={`Current grid: ${gridSize}`}
+            title={`Current grid: ${gridSize.charAt(0)} across`}
           >
             <span>⊞</span>
           </button>
           {showGridMenu && (
             <div className="dropdown-menu">
+              <button 
+                className={`dropdown-item ${gridSize === '1x1' ? 'active' : ''}`}
+                onClick={() => {
+                  onGridSizeChange('1x1');
+                  setShowGridMenu(false);
+                }}
+              >
+                <span className="dropdown-icon">●</span>
+                <span>1 Across</span>
+              </button>
               <button 
                 className={`dropdown-item ${gridSize === '2x2' ? 'active' : ''}`}
                 onClick={() => {
@@ -78,8 +92,8 @@ const Header: React.FC<HeaderProps> = ({ onAddChart, gridSize, onGridSizeChange 
                   setShowGridMenu(false);
                 }}
               >
-                <span className="dropdown-icon">⊞</span>
-                <span>2×2 Grid</span>
+                <span className="dropdown-icon">••</span>
+                <span>2 Across</span>
               </button>
               <button 
                 className={`dropdown-item ${gridSize === '3x3' ? 'active' : ''}`}
@@ -88,8 +102,8 @@ const Header: React.FC<HeaderProps> = ({ onAddChart, gridSize, onGridSizeChange 
                   setShowGridMenu(false);
                 }}
               >
-                <span className="dropdown-icon">⋮⋮⋮</span>
-                <span>3×3 Grid</span>
+                <span className="dropdown-icon">•••</span>
+                <span>3 Across</span>
               </button>
               <button 
                 className={`dropdown-item ${gridSize === '4x4' ? 'active' : ''}`}
@@ -98,8 +112,8 @@ const Header: React.FC<HeaderProps> = ({ onAddChart, gridSize, onGridSizeChange 
                   setShowGridMenu(false);
                 }}
               >
-                <span className="dropdown-icon">⋯⋯</span>
-                <span>4×4 Grid</span>
+                <span className="dropdown-icon">••••</span>
+                <span>4 Across</span>
               </button>
               <button 
                 className={`dropdown-item ${gridSize === '5x5' ? 'active' : ''}`}
@@ -108,8 +122,8 @@ const Header: React.FC<HeaderProps> = ({ onAddChart, gridSize, onGridSizeChange 
                   setShowGridMenu(false);
                 }}
               >
-                <span className="dropdown-icon">⋅⋅⋅⋅⋅</span>
-                <span>5×5 Grid</span>
+                <span className="dropdown-icon">•••••</span>
+                <span>5 Across</span>
               </button>
             </div>
           )}

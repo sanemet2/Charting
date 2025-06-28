@@ -3,6 +3,20 @@
   padding: 24px;
   background-color: #f5f6fa;
   overflow-y: auto;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center the chart content */
+}
+
+/* Fixed-width chart container for stability */
+.chart-content-container {
+  width: 100%;
+  max-width: 1600px; /* Fixed maximum width */
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Metrics Row */
@@ -82,55 +96,73 @@
   flex-direction: column;
   height: 100%;
   gap: 20px;
+  width: 100%;
 }
 
 
 
-/* Charts Grid - Base */
+/* Charts Grid - Fully Contained */
 .charts-grid {
   display: grid;
   gap: 20px;
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden; /* Prevent horizontal scrolling */
   padding: 4px; /* Small padding for shadow visibility */
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
-/* Grid Sizes */
+/* Grid Sizes - Fixed Heights for Consistency */
+.charts-grid.grid-1x1 {
+  grid-template-columns: 1fr;
+  grid-auto-rows: 500px;
+}
+
 .charts-grid.grid-2x2 {
   grid-template-columns: repeat(2, 1fr);
-  grid-auto-rows: minmax(350px, 1fr);
+  grid-auto-rows: 400px;
 }
 
 .charts-grid.grid-3x3 {
   grid-template-columns: repeat(3, 1fr);
-  grid-auto-rows: minmax(280px, 1fr);
+  grid-auto-rows: 320px;
 }
 
 .charts-grid.grid-4x4 {
   grid-template-columns: repeat(4, 1fr);
-  grid-auto-rows: minmax(220px, 1fr);
+  grid-auto-rows: 280px;
 }
 
 .charts-grid.grid-5x5 {
   grid-template-columns: repeat(5, 1fr);
-  grid-auto-rows: minmax(180px, 1fr);
+  grid-auto-rows: 240px;
 }
 
-/* Responsive adjustments */
-@media (max-width: 1600px) {
+/* Responsive adjustments - More conservative breakpoints */
+@media (max-width: 1000px) {
   .charts-grid.grid-5x5 {
     grid-template-columns: repeat(4, 1fr);
   }
-}
-
-@media (max-width: 1400px) {
-  .charts-grid.grid-4x4,
-  .charts-grid.grid-5x5 {
+  
+  .charts-grid.grid-4x4 {
     grid-template-columns: repeat(3, 1fr);
   }
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 800px) {
+  .charts-grid.grid-4x4,
+  .charts-grid.grid-5x5 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .charts-grid.grid-3x3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
   .charts-grid.grid-3x3,
   .charts-grid.grid-4x4,
   .charts-grid.grid-5x5 {
@@ -138,7 +170,7 @@
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 480px) {
   .charts-grid.grid-2x2,
   .charts-grid.grid-3x3,
   .charts-grid.grid-4x4,
@@ -291,6 +323,7 @@
   align-items: center;
   justify-content: center;
   height: 100%;
+  width: 100%;
   text-align: center;
   color: #6b7280;
 }
@@ -320,12 +353,51 @@
   font-style: italic;
 }
 
-/* Chart wrapper */
+/* Chart wrapper - Fully Flexible */
 .chart-wrapper {
   height: 100%;
+  cursor: grab;
+  transition: all 0.2s ease;
+  min-width: 0; /* Allow full shrinking */
+  max-width: 100%; /* Prevent overflow */
+  box-sizing: border-box;
+  overflow: hidden; /* Contain any chart overflow */
 }
 
-/* Drag and Drop Styles */
+.chart-wrapper:active {
+  cursor: grabbing;
+}
+
+/* Chart drag states */
+.chart-wrapper.dragging {
+  opacity: 0.5;
+  transform: scale(0.95);
+  cursor: grabbing;
+  z-index: 1000;
+}
+
+.chart-wrapper.reorder-target {
+  border: 2px dashed #6366f1;
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.chart-wrapper.reorder-target::before {
+  content: "📊 Drop to reorder";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(99, 102, 241, 0.9);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: 600;
+  z-index: 10;
+  pointer-events: none;
+  font-size: 14px;
+}
+
+/* Drag and Drop Styles - Data Series */
 .chart-wrapper.drop-target {
   background: #e6f3ff;
   border: 2px dashed #0066cc;
@@ -349,6 +421,17 @@
   z-index: 10;
   pointer-events: none;
   font-size: 14px;
+}
+
+/* Prevent data series drop styling when chart reordering */
+.chart-wrapper.reorder-target.drop-target {
+  background: rgba(99, 102, 241, 0.05);
+  border: 2px dashed #6366f1;
+}
+
+.chart-wrapper.reorder-target.drop-target::before {
+  content: "📊 Drop to reorder";
+  background: rgba(99, 102, 241, 0.9);
 }
 
 .chart-canvas.drag-over {

@@ -1,30 +1,9 @@
-.data-browser-trigger {
-  position: fixed;
-  right: 0;
-  top: 50px; /* Below header */
-  bottom: 30px; /* Above status bar */
-  width: 20px;
-  background: transparent;
-  z-index: 99;
-}
-
 .data-browser {
-  position: fixed;
-  right: 0;
-  top: 50px; /* Below header */
-  bottom: 30px; /* Above status bar */
-  width: 300px;
+  width: 100%;
+  height: 100%;
   background: white;
-  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
-  transform: translateX(100%);
-  transition: transform 300ms ease-out;
-  z-index: 100;
   display: flex;
   flex-direction: column;
-}
-
-.data-browser.visible {
-  transform: translateX(0);
 }
 
 .data-browser-header {
@@ -39,27 +18,6 @@
   font-size: 18px;
   font-weight: 600;
   margin: 0;
-}
-
-.pin-button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 18px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: all 0.2s;
-  opacity: 0.5;
-}
-
-.pin-button:hover {
-  background: #f0f0f0;
-  opacity: 1;
-}
-
-.pin-button.pinned {
-  opacity: 1;
-  background: #e0e0e0;
 }
 
 .search-container {

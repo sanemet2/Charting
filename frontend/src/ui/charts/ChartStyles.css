@@ -8,8 +8,11 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  min-height: 200px;
+  min-height: 0; /* Remove fixed min-height */
+  min-width: 0; /* Allow charts to shrink fully */
   transition: box-shadow 0.2s;
+  box-sizing: border-box;
+  max-width: 100%; /* Strict width containment */
 }
 
 .chart-container:hover {
@@ -23,6 +26,7 @@
   justify-content: space-between;
   align-items: center;
   min-height: 48px;
+  gap: 8px; /* Ensure space between title and actions */
 }
 
 .chart-title {
@@ -33,9 +37,16 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 150px; /* Prevent title from taking too much space */
+  flex-shrink: 1; /* Allow title to shrink if needed */
 }
 
 /* Adjust sizes based on grid */
+.grid-1x1 .chart-header {
+  padding: 16px 20px;
+  min-height: 56px;
+}
+
 .grid-3x3 .chart-header,
 .grid-4x4 .chart-header,
 .grid-5x5 .chart-header {
@@ -48,14 +59,21 @@
   min-height: 36px;
 }
 
+.grid-1x1 .chart-title {
+  font-size: 18px;
+  max-width: 300px; /* Generous space for single chart */
+}
+
 .grid-3x3 .chart-title,
 .grid-4x4 .chart-title,
 .grid-5x5 .chart-title {
   font-size: 13px;
+  max-width: 120px; /* More constrained in smaller grids */
 }
 
 .grid-5x5 .chart-title {
   font-size: 12px;
+  max-width: 100px; /* Even more constrained in 5x5 grid */
 }
 
 /* Hide edit icon in smaller grids */
@@ -78,6 +96,7 @@
 .chart-actions {
   display: flex;
   gap: 8px;
+  flex-shrink: 0; /* Prevent actions from being compressed */
 }
 
 .chart-action {
@@ -103,8 +122,8 @@
 .chart-body {
   position: relative;
   flex: 1;
-  padding: 4px 8px 8px 8px; /* Reduced top padding since legend is separate */
-  min-height: 300px;
+  padding: 4px 8px 8px 8px;
+  min-height: 150px; /* Reduced from 300px to work better with grid constraints */
   display: flex;
   background: #fafbfc;
   overflow: hidden;
@@ -115,6 +134,8 @@
   align-items: center;
   justify-content: center;
   padding: 10px;
+  background: white; /* Remove gray background for empty state */
+  min-height: 0; /* Let empty state adapt to container */
 }
 
 .chart-placeholder {
@@ -129,7 +150,11 @@
   opacity: 0.3;
 }
 
-/* Adjust sizes for smaller grids */
+/* Adjust sizes for different grids - Remove min-heights */
+.grid-1x1 .chart-body {
+  padding: 12px 16px 16px 16px;
+}
+
 .grid-3x3 .chart-body,
 .grid-4x4 .chart-body {
   padding: 6px;
@@ -137,6 +162,10 @@
 
 .grid-5x5 .chart-body {
   padding: 4px;
+}
+
+.grid-5x5 .chart-body.empty-state {
+  padding: 8px;
 }
 
 .grid-3x3 .chart-icon,
@@ -281,6 +310,7 @@
   height: 100%;
   text-align: center;
   color: #6b7280;
+  transform: translateY(-10%); /* Move content up by 10% for better visual balance */
 }
 
 .chart-empty-state .empty-icon {
@@ -300,6 +330,50 @@
   font-size: 14px;
   color: #9ca3af;
   margin: 0;
+}
+
+/* Responsive empty state for different grid sizes */
+.grid-1x1 .chart-empty-state .empty-icon {
+  font-size: 64px;
+  margin-bottom: 24px;
+}
+
+.grid-1x1 .chart-empty-state h3 {
+  font-size: 24px;
+  margin: 0 0 12px 0;
+}
+
+.grid-1x1 .chart-empty-state p {
+  font-size: 18px;
+}
+
+.grid-5x5 .chart-empty-state .empty-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.grid-5x5 .chart-empty-state h3 {
+  font-size: 12px;
+  margin: 0 0 4px 0;
+}
+
+.grid-5x5 .chart-empty-state p {
+  font-size: 10px;
+  display: none; /* Hide description text in 5x5 to save space */
+}
+
+.grid-4x4 .chart-empty-state .empty-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+
+.grid-4x4 .chart-empty-state h3 {
+  font-size: 14px;
+  margin: 0 0 6px 0;
+}
+
+.grid-4x4 .chart-empty-state p {
+  font-size: 11px;
 }
 
 /* Editable elements */
@@ -385,60 +459,209 @@
   pointer-events: auto;
 } 
 
-/* Separate Legend Container - Outside Chart */
-.chart-legend-container {
-  padding: 8px 16px 4px 16px;
-  background: #fafbfc;
-  display: flex;
-  justify-content: center;
+/* Inline Legend - Inside Chart Body */
+.chart-inline-legend {
+  position: absolute;
+  bottom: 5px; /* Just a tiny notch lower for perfect positioning */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  pointer-events: auto;
 }
 
-/* Editable Legend Styles - Clean Title Bar */
-.editable-legend {
+/* Carousel Next Button */
+.legend-carousel-next {
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 50%;
+  color: #6366f1;
+  font-size: 12px;
+  font-weight: bold;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 28px;
-  background: rgba(255, 255, 255, 0.9);
-  padding: 6px 14px;
-  border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  border: 1px solid rgba(229, 231, 235, 0.8);
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.legend-carousel-next:hover {
+  background: rgba(99, 102, 241, 0.2);
+  color: #4f46e5;
+  transform: scale(1.1);
+}
+
+.legend-carousel-next:active {
+  transform: scale(0.9);
+}
+
+/* Responsive inline legend positioning and behavior */
+.grid-1x1 .chart-inline-legend {
+  bottom: 28px; /* More space for larger charts */
+}
+
+.grid-1x1 .legend-carousel-track {
+  gap: 20px; /* More generous spacing for large grid */
+}
+
+.grid-1x1 .legend-carousel-next {
+  width: 28px;
+  height: 28px;
+  font-size: 16px;
+}
+
+.grid-2x2 .legend-carousel-track {
+  gap: 14px; /* Slightly reduced spacing */
+}
+
+.grid-3x3 .legend-carousel-track {
+  gap: 12px; /* Moderately reduced spacing */
+}
+
+.grid-4x4 .chart-inline-legend,
+.grid-5x5 .chart-inline-legend {
+  bottom: 16px; /* Moved down for better balance in smaller grids */
+}
+
+.grid-4x4 .legend-carousel-track,
+.grid-5x5 .legend-carousel-track {
+  gap: 8px; /* Compact spacing for small grids */
+}
+
+.grid-4x4 .legend-carousel-next,
+.grid-5x5 .legend-carousel-next {
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
+}
+
+/* Legend Carousel Container */
+.legend-carousel-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: transparent;
+  padding: 6px 16px; /* Increased horizontal padding to prevent cutoff */
   min-height: 28px;
+  max-height: 28px;
+  overflow: visible; /* Allow button to be visible */
+  width: auto;
+  position: relative;
+  min-width: 320px; /* Ensure enough space for 2 legend items plus button */
+}
+
+/* Carousel Track - Sliding Container */
+.legend-carousel-track {
+  display: flex;
+  align-items: center;
+  gap: 16px; /* Default spacing between legend items */
+  white-space: nowrap;
+  will-change: transform; /* Optimize for animations */
 }
 
 .legend-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  min-height: 24px;
+  justify-content: center; /* Center elements within each legend item */
+  gap: 6px; /* Slightly reduced spacing to fit more items horizontally */
+  font-size: 11px;
+  min-height: 24px; /* Match the legend container height */
   font-weight: 500;
+  flex-shrink: 0; /* Prevent items from shrinking */
+  padding: 4px 6px; /* Balanced padding for proper alignment */
+  white-space: nowrap; /* Prevent text wrapping within items */
+}
+
+/* Responsive legend item sizing */
+.grid-1x1 .legend-item {
+  font-size: 13px;
+  gap: 10px; /* More generous spacing for large grid */
+  min-height: 28px; /* Match container proportions */
+  padding: 5px 8px;
+}
+
+.grid-1x1 .legend-label {
+  max-width: 180px; /* More space for large grid */
+}
+
+.grid-2x2 .legend-label {
+  max-width: 140px; /* Moderate space */
+}
+
+.grid-3x3 .legend-label {
+  max-width: 100px; /* Balanced space */
+}
+
+.grid-4x4 .legend-item,
+.grid-5x5 .legend-item {
+  font-size: 9px;
+  gap: 4px; /* More compact spacing for small grids */
+  min-height: 20px; /* Match container proportions */
+  padding: 2px 4px; /* More compact padding */
+}
+
+.grid-4x4 .legend-label,
+.grid-5x5 .legend-label {
+  max-width: 60px; /* Very compact for small grids */
 }
 
 .legend-color {
-  width: 12px;
-  height: 12px;
-  border-radius: 2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 1px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   flex-shrink: 0;
 }
 
+/* Responsive legend color sizing */
+.grid-1x1 .legend-color {
+  width: 12px;
+  height: 12px;
+}
+
+.grid-4x4 .legend-color,
+.grid-5x5 .legend-color {
+  width: 6px;
+  height: 6px;
+}
+
 .legend-label {
+  position: relative; /* Enable absolute positioning for indicators */
   color: #374151;
   font-weight: 500;
   white-space: nowrap;
   cursor: pointer;
-  padding: 2px 4px;
-  border-radius: 4px;
+  padding: 1px 3px;
+  border-radius: 3px;
   transition: all 0.2s;
   display: flex;
   align-items: center;
-  min-height: 20px;
+  min-height: 16px;
+  max-width: 120px; /* Limit width to prevent overflow */
+  overflow: hidden;
+  text-overflow: ellipsis; /* Add ellipsis for long text */
 }
 
 .legend-label:hover {
   background-color: rgba(99, 102, 241, 0.1);
   color: #6366f1;
+}
+
+/* Visual indicator for truncated text */
+.legend-label[title]:hover::before {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 3px;
+  height: 3px;
+  background: #6366f1;
+  border-radius: 50%;
+  opacity: 0.6;
 }
 
 .legend-label.editable:hover::after {
@@ -471,7 +694,7 @@
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
-  margin-left: 2px;
+  margin: 0; /* Remove margin since button is now below text */
   flex-shrink: 0;
 }
 
@@ -485,21 +708,112 @@
   transform: scale(0.95);
 }
 
-/* Plotly Chart Container - Proper Containment */
+/* Responsive axis toggle button sizing */
+.grid-1x1 .axis-toggle-btn {
+  width: 26px;
+  height: 24px;
+  font-size: 12px;
+}
+
+.grid-4x4 .axis-toggle-btn,
+.grid-5x5 .axis-toggle-btn {
+  width: 18px;
+  height: 16px;
+  font-size: 8px;
+}
+
+/* Legend overflow indicator */
+.legend-overflow {
+  justify-content: center;
+  padding: 4px 8px;
+}
+
+.legend-overflow-indicator {
+  color: #6b7280;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: help;
+  padding: 2px 6px;
+  border-radius: 12px;
+  background: rgba(107, 114, 128, 0.1);
+  border: 1px solid rgba(107, 114, 128, 0.2);
+  transition: all 0.2s;
+}
+
+.legend-overflow-indicator.clickable {
+  cursor: pointer;
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: #6366f1;
+}
+
+.legend-overflow-indicator:hover {
+  background: rgba(107, 114, 128, 0.15);
+  color: #374151;
+  transform: scale(1.05);
+}
+
+.legend-overflow-indicator.clickable:hover {
+  background: rgba(99, 102, 241, 0.2);
+  color: #4f46e5;
+  transform: scale(1.1);
+}
+
+.legend-overflow-indicator.clickable:active {
+  transform: scale(0.95);
+}
+
+/* Responsive overflow indicator */
+.grid-1x1 .legend-overflow-indicator {
+  font-size: 12px;
+  padding: 3px 8px;
+}
+
+.grid-4x4 .legend-overflow-indicator,
+.grid-5x5 .legend-overflow-indicator {
+  font-size: 8px;
+  padding: 1px 4px;
+}
+
+/* Plotly Chart Container - Strict Containment */
 .plotly-chart-container {
   position: relative;
   width: 100%;
   height: 100%;
   overflow: hidden; /* Prevent chart from bleeding outside */
   border-radius: 0 0 12px 12px; /* Match parent container rounding */
+  min-height: 0; /* Allow charts to be as small as needed */
+  max-width: 100%; /* Strict width constraint */
 }
 
-/* Ensure Plotly respects container boundaries */
+/* Ensure Plotly respects container boundaries strictly */
 .plotly-chart-container .plotly {
   width: 100% !important;
   height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  min-width: 0 !important; /* Allow shrinking */
+  box-sizing: border-box !important;
 }
 
+/* Additional constraints for Plotly's internal elements */
 .plotly-chart-container .main-svg {
+  max-width: 100% !important;
+  max-height: 100% !important;
+  min-width: 0 !important;
   overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+/* Force chart body to respect fixed heights */
+.chart-body {
+  position: relative;
+  flex: 1;
+  padding: 4px 8px 8px 8px;
+  min-height: 0 !important; /* Remove min-height constraints */
+  display: flex;
+  background: #fafbfc;
+  overflow: hidden;
+  max-width: 100%; /* Prevent overflow */
+  box-sizing: border-box;
 }

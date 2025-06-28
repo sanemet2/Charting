@@ -5,6 +5,23 @@
   flex-direction: column;
   overflow: hidden;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  transition: opacity 200ms ease-in-out;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+/* Hide sidebar content when collapsed */
+.left-sidebar.collapsed .charts-sidebar {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.left-sidebar.open .charts-sidebar {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 
@@ -13,6 +30,8 @@
   padding: 20px;
   overflow-y: auto;
   flex: 1;
+  will-change: auto; /* Optimize rendering during transitions */
+  backface-visibility: hidden; /* Force hardware acceleration */
 }
 
 .libraries-header {
@@ -128,7 +147,7 @@
   cursor: pointer;
   border-radius: 8px;
   font-size: 14px;
-  transition: all 0.2s;
+  transition: background-color 0.2s, color 0.2s; /* Only transition specific properties */
   color: #e4e6eb;
   margin-bottom: 4px;
   display: flex;

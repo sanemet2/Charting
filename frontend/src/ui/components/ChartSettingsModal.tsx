@@ -11,10 +11,6 @@ export interface ChartSettings {
   showLegend: boolean;
   // Define showTooltip property for tooltip visibility
   showTooltip: boolean;
-  // Define showDots property for data point visibility
-  showDots: boolean;
-  // Define chartAnimation property for animation enablement
-  chartAnimation: boolean;
   // Define axisLabels property for axis label configuration
   axisLabels: {
     // Define xAxis property for X-axis label text
@@ -120,26 +116,6 @@ const ChartSettingsModal: React.FC<ChartSettingsModalProps> = ({
                 onChange={(e) => setLocalSettings({ ...localSettings, showTooltip: e.target.checked })}
               />
               <span>Show Tooltips</span>
-            </label>
-
-            {chartType === 'line' && (
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={localSettings.showDots}
-                  onChange={(e) => setLocalSettings({ ...localSettings, showDots: e.target.checked })}
-                />
-                <span>Show Data Points</span>
-              </label>
-            )}
-
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={localSettings.chartAnimation}
-                onChange={(e) => setLocalSettings({ ...localSettings, chartAnimation: e.target.checked })}
-              />
-              <span>Enable Animations</span>
             </label>
           </div>
 

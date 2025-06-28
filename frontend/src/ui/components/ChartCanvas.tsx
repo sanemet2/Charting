@@ -27,6 +27,8 @@ interface ChartCanvasProps {
   onRemoveChart: (id: string) => void;
   // Define onUpdateChart property as function for chart modification
   onUpdateChart: (id: string, updates: Partial<Chart>) => void;
+  // Define onReorderCharts property as function for chart repositioning
+  onReorderCharts: (draggedChartId: string, targetChartId: string) => void;
   // Define optional activeLibraryName property for library display
   activeLibraryName?: string;
   // Define hasLibraries property for conditional rendering
@@ -39,12 +41,15 @@ const ChartCanvas: React.FC<ChartCanvasProps> = ({
   charts, 
   onRemoveChart, 
   onUpdateChart,
+  onReorderCharts,
   activeLibraryName, 
   hasLibraries, 
   gridSize 
 }) => {
   const [dragOverChart, setDragOverChart] = useState<string | null>(null);
   const [isDragOverCanvas, setIsDragOverCanvas] = useState(false);
+  const [draggedChartId, setDraggedChartId] = useState<string | null>(null);
+  const [dragType, setDragType] = useState<'chart' | 'data-series' | null>(null);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -81,11 +86,61 @@ const ChartCanvas: React.FC<ChartCanvasProps> = ({
     }
   };
 
+  // Chart drag handlers for reordering
+  const handleChartDragStart = (e: React.DragEvent, chartId: string) => {
+    setDraggedChartId(chartId);
+    setDragType('chart');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('application/json', JSON.stringify({ 
+      type: 'chart', 
+      chartId 
+    }));
+  };
+
+  const handleChartDragEnd = () => {
+    setDraggedChartId(null);
+    setDragType(null);
+    setDragOverChart(null);
+  };
+
+  const handleChartReorderDragOver = (e: React.DragEvent, targetChartId: string) => {
+    e.preventDefault();
+    if (dragType === 'chart' && draggedChartId !== targetChartId) {
+      e.dataTransfer.dropEffect = 'move';
+      setDragOverChart(targetChartId);
+    }
+  };
+
+  const handleChartReorderDrop = (e: React.DragEvent, targetChartId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    try {
+      const data = JSON.parse(e.dataTransfer.getData('application/json'));
+      if (data.type === 'chart' && draggedChartId) {
+        onReorderCharts(draggedChartId, targetChartId);
+      }
+    } catch (error) {
+      console.error('Error parsing dropped data:', error);
+    } finally {
+      setDragOverChart(null);
+      setDraggedChartId(null);
+      setDragType(null);
+    }
+  };
+
   const handleChartDragOver = (e: React.DragEvent, chartId: string) => {
     e.preventDefault();
     e.stopPropagation();
-    e.dataTransfer.dropEffect = 'copy';
-    setDragOverChart(chartId);
+    
+    // Handle different drag types
+    if (dragType === 'chart') {
+      handleChartReorderDragOver(e, chartId);
+    } else {
+      // Data series drag
+      e.dataTransfer.dropEffect = 'copy';
+      setDragOverChart(chartId);
+    }
   };
 
   const handleChartDragLeave = (e: React.DragEvent, chartId: string) => {
@@ -100,12 +155,15 @@ const ChartCanvas: React.FC<ChartCanvasProps> = ({
   const handleChartDrop = (e: React.DragEvent, chartId: string) => {
     e.preventDefault();
     e.stopPropagation();
-    setDragOverChart(null);
-    setIsDragOverCanvas(false);
-
+    
     try {
       const data = JSON.parse(e.dataTransfer.getData('application/json'));
-      if (data.type === 'data-series') {
+      
+      if (data.type === 'chart') {
+        // Handle chart reordering
+        handleChartReorderDrop(e, chartId);
+      } else if (data.type === 'data-series') {
+        // Handle data series drop
         const chart = charts.find(c => c.id === chartId);
         if (chart) {
           const existingSeries = chart.dataSeries || [];
@@ -113,6 +171,8 @@ const ChartCanvas: React.FC<ChartCanvasProps> = ({
           onUpdateChart(chartId, { dataSeries: newSeries });
           console.log(`Added series to chart ${chartId}:`, data.series);
         }
+        setDragOverChart(null);
+        setIsDragOverCanvas(false);
       }
     } catch (error) {
       console.error('Error parsing dropped data:', error);
@@ -121,7 +181,6 @@ const ChartCanvas: React.FC<ChartCanvasProps> = ({
 
   const renderChart = (chart: Chart) => {
     const isDropTarget = dragOverChart === chart.id;
-    const shouldAnimate = charts.length <= 3; // Disable animations when >3 charts
     
     switch (chart.type) {
       case 'line':
@@ -132,7 +191,6 @@ const ChartCanvas: React.FC<ChartCanvasProps> = ({
             onClose={onRemoveChart}
             dataSeries={chart.dataSeries}
             isDropTarget={isDropTarget}
-            forceDisableAnimation={!shouldAnimate}
             gridSize={gridSize}
           />
         );
@@ -150,43 +208,54 @@ const ChartCanvas: React.FC<ChartCanvasProps> = ({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      {!hasLibraries ? (
-        <div className="empty-canvas">
-          <div className="empty-icon">📚</div>
-          <h2>Welcome to Chart Library</h2>
-          <p>Create your first library to start organizing your charts</p>
-          <p className="hint">Click the + button in the sidebar to create a library</p>
-        </div>
-      ) : !activeLibraryName ? (
-        <div className="empty-canvas">
-          <div className="empty-icon">📁</div>
-          <h2>Select a library</h2>
-          <p>Choose a library from the sidebar to view or create charts</p>
-        </div>
-      ) : charts.length === 0 ? (
-        <div className="empty-canvas">
-          <div className="empty-icon">📊</div>
-          <h2>No charts in {activeLibraryName}</h2>
-          <p>Click "+ New Chart" in the header to create your first chart</p>
-          <p className="hint">Or drag data series from the Data Browser to create charts</p>
-        </div>
-      ) : (
-        <div className="chart-content">
-          <div className={`charts-grid grid-${gridSize}`}>
-            {charts.map(chart => (
-              <div 
-                key={chart.id} 
-                className={`chart-wrapper ${dragOverChart === chart.id ? 'drop-target' : ''}`}
-                onDragOver={(e) => handleChartDragOver(e, chart.id)}
-                onDragLeave={(e) => handleChartDragLeave(e, chart.id)}
-                onDrop={(e) => handleChartDrop(e, chart.id)}
-              >
-                {renderChart(chart)}
-              </div>
-            ))}
+      <div className="chart-content-container">
+        {!hasLibraries ? (
+          <div className="empty-canvas">
+            <div className="empty-icon">📚</div>
+            <h2>Welcome to Chart Library</h2>
+            <p>Create your first library to start organizing your charts</p>
+            <p className="hint">Click the + button in the sidebar to create a library</p>
           </div>
-        </div>
-      )}
+        ) : !activeLibraryName ? (
+          <div className="empty-canvas">
+            <div className="empty-icon">📁</div>
+            <h2>Select a library</h2>
+            <p>Choose a library from the sidebar to view or create charts</p>
+          </div>
+        ) : charts.length === 0 ? (
+          <div className="empty-canvas">
+            <div className="empty-icon">📊</div>
+            <h2>No charts in {activeLibraryName}</h2>
+            <p>Click "+ New Chart" in the header to create your first chart</p>
+            <p className="hint">Or drag data series from the Data Browser to create charts</p>
+          </div>
+        ) : (
+          <div className="chart-content">
+            <div className={`charts-grid grid-${gridSize}`}>
+              {charts.map(chart => (
+                <div 
+                  key={chart.id} 
+                  draggable={true}
+                  className={`chart-wrapper ${
+                    dragOverChart === chart.id ? 'drop-target' : ''
+                  } ${
+                    draggedChartId === chart.id ? 'dragging' : ''
+                  } ${
+                    dragType === 'chart' && draggedChartId !== chart.id ? 'reorder-target' : ''
+                  }`}
+                  onDragStart={(e) => handleChartDragStart(e, chart.id)}
+                  onDragEnd={handleChartDragEnd}
+                  onDragOver={(e) => handleChartDragOver(e, chart.id)}
+                  onDragLeave={(e) => handleChartDragLeave(e, chart.id)}
+                  onDrop={(e) => handleChartDrop(e, chart.id)}
+                >
+                  {renderChart(chart)}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

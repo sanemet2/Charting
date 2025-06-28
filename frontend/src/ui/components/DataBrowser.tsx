@@ -62,7 +62,6 @@ const SeriesItem: React.FC<SeriesItemProps> = ({ series }) => {
 
 
 const DataBrowser: React.FC<DataBrowserProps> = ({ isPinned, onPinToggle }) => {
-  const [isHovered, setIsHovered] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [dataStructure, setDataStructure] = useState<DataStructure | null>(null);
@@ -201,31 +200,11 @@ const DataBrowser: React.FC<DataBrowserProps> = ({ isPinned, onPinToggle }) => {
     ));
   };
 
-  const isVisible = isPinned || isHovered;
-
   return (
-    <>
-      {/* Hover trigger zone */}
-      <div 
-        className="data-browser-trigger"
-        onMouseEnter={() => setIsHovered(true)}
-      />
-      
-      <div 
-        className={`data-browser ${isVisible ? 'visible' : ''}`}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        <div className="data-browser-header">
-          <h2>Data Browser</h2>
-          <button 
-            className={`pin-button ${isPinned ? 'pinned' : ''}`}
-            onClick={onPinToggle}
-            title={isPinned ? 'Unpin sidebar' : 'Pin sidebar'}
-          >
-            📌
-          </button>
-        </div>
+    <div className="data-browser">
+      <div className="data-browser-header">
+        <h2>Data Browser</h2>
+      </div>
         
         <div className="search-container">
           <input
@@ -248,11 +227,7 @@ const DataBrowser: React.FC<DataBrowserProps> = ({ isPinned, onPinToggle }) => {
         <div className="file-tree">
           {searchQuery.trim() ? renderSearchResults() : renderFileTree()}
         </div>
-        
-      </div>
-      
-
-    </>
+    </div>
   );
 };
 
