@@ -46,8 +46,6 @@ export const usePlotlyConfig = ({
 
   // Helper function to get the actual trace color for a series
   const getSeriesColor = (s: any, index: number) => {
-    if (s.dataKey === 'cpi-yoy') return '#ff0000';
-    if (s.dataKey === 'unemployment-rate') return '#ff0000';
     return s.color || (index === 0 ? settings.colors.primary : settings.colors.secondary);
   };
 
@@ -63,24 +61,14 @@ export const usePlotlyConfig = ({
         x: xData,
         y: yData,
         type: 'scatter' as const,
-        mode: (s.dataKey === 'unemployment-rate' || s.dataKey === 'cpi-yoy') ? 'lines+markers' as const : 'lines' as const,
+        mode: 'lines' as const,
         name: seriesNames[s.dataKey] || s.name,
         yaxis: seriesAxisAssignment[s.dataKey] || 'y',
         line: {
           color: getSeriesColor(s, index),
-          width: s.dataKey === 'cpi-yoy' ? 6 : 
-                 s.dataKey === 'unemployment-rate' ? 6 : 
-                 3
+          width: 3
         },
-        connectgaps: false,
-        ...(s.dataKey === 'unemployment-rate' || s.dataKey === 'cpi-yoy' ? {
-          marker: {
-            size: 10,
-            color: getSeriesColor(s, index),
-            symbol: 'circle',
-            line: { width: 1, color: '#ffffff' }
-          }
-        } : {}),
+        connectgaps: true,
         hovertemplate: `<b>%{fullData.name}</b><br>` +
                        `Date: %{x}<br>` +
                        `Value: %{y:,.0f}<br>` +
@@ -188,14 +176,18 @@ export const usePlotlyConfig = ({
       }
     }
     
+    // 🔧 FIX: Ensure symmetrical margins for a centered plot
+    const finalMargin = Math.max(leftMargin, rightMargin);
+
     debug(debugCategories.PLOTLY_CONFIG, {
       message: 'Dynamic margin calculation',
-      leftMargin,
-      rightMargin,
+      calculatedLeft: leftMargin,
+      calculatedRight: rightMargin,
+      finalSymmetricalMargin: finalMargin,
       font
     });
 
-    return { l: leftMargin, r: rightMargin };
+    return { l: finalMargin, r: finalMargin };
   }, [plotlyData, hasLeftAxisData, hasRightAxisData, responsiveSettings.fontSize]);
 
   // Calculate data range for right axis to sync gridlines when no left axis data
@@ -271,7 +263,11 @@ export const usePlotlyConfig = ({
         },
         showgrid: settings.showGrid,
         gridcolor: '#f0f0f0',
-        tickformat: '~s',
+        tickformat: ',.1f',
+        tickformatstops: [
+          { dtickrange: [1000, null], value: '.2s' },  // e.g., 1.5k, 2M
+          { dtickrange: [10, 1000], value: ',.0f' }     // e.g., 10, 123
+        ],
         side: 'left',
         nticks: responsiveSettings.nticks,
         tickfont: { 
@@ -301,7 +297,11 @@ export const usePlotlyConfig = ({
         },
         showgrid: false,
         gridcolor: '#f0f0f0',
-        tickformat: '~s',
+        tickformat: ',.1f',
+        tickformatstops: [
+          { dtickrange: [1000, null], value: '.2s' },  // e.g., 1.5k, 2M
+          { dtickrange: [10, 1000], value: ',.0f' }     // e.g., 10, 123
+        ],
         side: 'right',
         overlaying: 'y',
         nticks: responsiveSettings.nticks,
