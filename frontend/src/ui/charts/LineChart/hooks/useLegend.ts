@@ -18,6 +18,9 @@ interface UseLegendProps {
   isNarrow: boolean;
   isVerySmall: boolean;
   isDimensionsStable: boolean;
+  responsiveSettings: {
+    fontSize: number;
+  };
 }
 
 interface UseLegendReturn {
@@ -38,6 +41,7 @@ interface UseLegendReturn {
     currentOffset: number;
     visibleItems: Series[];
     canScrollNext: boolean;
+    maxVisibleItems: number;
   };
   handleCarouselNext: () => void;
   
@@ -56,7 +60,8 @@ export const useLegend = ({
   containerDimensions,
   isNarrow,
   isVerySmall,
-  isDimensionsStable
+  isDimensionsStable,
+  responsiveSettings
 }: UseLegendProps): UseLegendReturn => {
   
   const [seriesNames, setSeriesNames] = useState<{[key: string]: string}>({});
@@ -99,7 +104,41 @@ export const useLegend = ({
 
   // Carousel logic
   const getLegendCarousel = () => {
-    const maxVisibleItems = 2; // Fixed to 2 items as requested
+    // 🔧 FIX: Dynamic calculation of visible items based on container width AND font size
+    const itemPadding = 24; // Approx padding/margin per item
+    const avgCharWidth = responsiveSettings.fontSize * 0.6; // Estimate char width based on font size
+    const iconWidths = 60; // Space for L/R toggle, color swatch, etc.
+
+    // If there are only two series, always try to show both.
+    if (processedSeries.length <= 2) {
+      return {
+        hasOverflow: false,
+        maxOffset: 0,
+        currentOffset: 0,
+        visibleItems: processedSeries,
+        canScrollNext: false,
+        maxVisibleItems: 2
+      };
+    }
+
+    let totalItemsWidth = 0;
+    let maxVisibleItems = 0;
+
+    for (const series of processedSeries) {
+      const name = seriesNames[series.dataKey] || series.name;
+      const itemWidth = (name.length * avgCharWidth) + iconWidths + itemPadding;
+      if (totalItemsWidth + itemWidth > containerDimensions.width && maxVisibleItems > 0) {
+        break; // Not enough space for the next item
+      }
+      totalItemsWidth += itemWidth;
+      maxVisibleItems++;
+    }
+    
+    // Ensure at least one item is shown if there are any series
+    if (processedSeries.length > 0 && maxVisibleItems === 0) {
+      maxVisibleItems = 1;
+    }
+
     const hasOverflow = processedSeries.length > maxVisibleItems;
     const maxOffset = hasOverflow ? processedSeries.length - maxVisibleItems : 0;
     
@@ -111,15 +150,16 @@ export const useLegend = ({
       maxOffset,
       currentOffset,
       visibleItems: processedSeries.slice(currentOffset, currentOffset + maxVisibleItems),
-      canScrollNext: hasOverflow
+      canScrollNext: hasOverflow,
+      maxVisibleItems
     };
   };
 
   const handleCarouselNext = () => {
+    const { maxVisibleItems } = getLegendCarousel(); // Get current dynamic value
     setCarouselOffset((prev) => {
       const next = prev + 1;
-      // Endless loop: if we reach the end, go back to start
-      const maxOffset = Math.max(0, processedSeries.length - 2);
+      const maxOffset = Math.max(0, processedSeries.length - maxVisibleItems);
       const newOffset = next > maxOffset ? 0 : next;
       return newOffset;
     });
@@ -166,7 +206,7 @@ export const useLegend = ({
     debug(debugCategories.LEGEND, {
       message: 'Legend style calculation',
       legendHeight,
-      fontSize: settings.fontSize
+      fontSize: responsiveSettings.fontSize // Use responsive font size
     });
     
     return {
@@ -177,12 +217,12 @@ export const useLegend = ({
       justifyContent: 'center',
       padding: settings.padding,
       backgroundColor: 'rgba(248, 250, 252, 0.8)',
-      fontSize: `${settings.fontSize}px`,
+      fontSize: `${responsiveSettings.fontSize}px`, // Use responsive font size
       boxSizing: 'border-box',
       flexShrink: 0,
       position: 'relative' // Ensure it's in normal document flow
     };
-  }, [legendHeight, gridSize]);
+  }, [legendHeight, gridSize, responsiveSettings.fontSize]);
 
   const shouldShowLegend = settings.showLegend && processedSeries.length > 0;
 

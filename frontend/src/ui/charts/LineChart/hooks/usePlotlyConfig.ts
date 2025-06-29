@@ -167,8 +167,9 @@ export const usePlotlyConfig = ({
       if (allLeftYValues.length > 0) {
         const min = Math.min(...allLeftYValues);
         const max = Math.max(...allLeftYValues);
-        const widestLabel = formatter.format(min).length > formatter.format(max).length ? min : max;
-        const widestLabelWidth = measureText(formatter.format(widestLabel), font);
+        // Find the value with the largest magnitude (absolute value) to estimate the widest label
+        const widestLabelValue = Math.abs(min) > Math.abs(max) ? min : max;
+        const widestLabelWidth = measureText(formatter.format(widestLabelValue), font);
         leftMargin = widestLabelWidth + TICK_PADDING;
       }
     }
@@ -180,8 +181,9 @@ export const usePlotlyConfig = ({
       if (allRightYValues.length > 0) {
         const min = Math.min(...allRightYValues);
         const max = Math.max(...allRightYValues);
-        const widestLabel = formatter.format(min).length > formatter.format(max).length ? min : max;
-        const widestLabelWidth = measureText(formatter.format(widestLabel), font);
+        // Find the value with the largest magnitude (absolute value) to estimate the widest label
+        const widestLabelValue = Math.abs(min) > Math.abs(max) ? min : max;
+        const widestLabelWidth = measureText(formatter.format(widestLabelValue), font);
         rightMargin = widestLabelWidth + TICK_PADDING;
       }
     }
@@ -269,11 +271,7 @@ export const usePlotlyConfig = ({
         },
         showgrid: settings.showGrid,
         gridcolor: '#f0f0f0',
-        tickformat: ',.0f',
-        tickformatstops: [
-          { dtickrange: [null, 100], value: ',.1f' },
-          { dtickrange: [100, null], value: ',.0f' }
-        ],
+        tickformat: '~s',
         side: 'left',
         nticks: responsiveSettings.nticks,
         tickfont: { 
@@ -303,11 +301,7 @@ export const usePlotlyConfig = ({
         },
         showgrid: false,
         gridcolor: '#f0f0f0',
-        tickformat: ',.0f',
-        tickformatstops: [
-          { dtickrange: [null, 100], value: ',.1f' },
-          { dtickrange: [100, null], value: ',.0f' }
-        ],
+        tickformat: '~s',
         side: 'right',
         overlaying: 'y',
         nticks: responsiveSettings.nticks,

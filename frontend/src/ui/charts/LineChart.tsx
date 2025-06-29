@@ -29,7 +29,8 @@ const LineChart: React.FC<LineChartProps> = ({
   series = [], 
   dataSeries = [],
   isDropTarget = false,
-  gridSize = '3x3'
+  gridSize = '3x3',
+  onDeleteSeries
 }) => {
   const [showSettings, setShowSettings] = useState(false);
   const [settings, setSettings] = useState<ChartSettings>(defaultSettings);
@@ -58,9 +59,7 @@ const LineChart: React.FC<LineChartProps> = ({
 
   // 🎯 REFACTORED: Axis assignment logic extracted to useAxisAssignment hook
   const { seriesAxisAssignment, setSeriesAxisAssignment } = useAxisAssignment({
-    processedSeries,
-    processedData,
-    gridSize
+    processedSeries
   });
 
   // 🔧 DEBUG: Plotly event handlers to understand pan end behavior
@@ -93,7 +92,8 @@ const LineChart: React.FC<LineChartProps> = ({
     containerDimensions,
     isNarrow,
     isVerySmall,
-    isDimensionsStable
+    isDimensionsStable,
+    responsiveSettings
   });
 
   // 🎯 REFACTORED: Plotly configuration logic extracted to usePlotlyConfig hook
@@ -237,6 +237,7 @@ const LineChart: React.FC<LineChartProps> = ({
                     seriesInputRef={legendData.seriesInputRef}
                     visibleItems={visibleItems}
                     canScrollNext={canScrollNext}
+                    onDeleteSeries={onDeleteSeries}
                     legendStyle={{
                       ...legendData.legendStyle,
                       // 🔧 FIX: Add transition for smooth appearance after font changes

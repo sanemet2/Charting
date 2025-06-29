@@ -179,6 +179,14 @@ const ChartCanvas: React.FC<ChartCanvasProps> = ({
     }
   };
 
+  const handleDeleteSeries = (chartId: string, seriesId: string) => {
+    const chart = charts.find(c => c.id === chartId);
+    if (chart && chart.dataSeries) {
+      const newSeries = chart.dataSeries.filter(s => s.id !== seriesId);
+      onUpdateChart(chartId, { dataSeries: newSeries });
+    }
+  };
+
   const renderChart = (chart: Chart) => {
     const isDropTarget = dragOverChart === chart.id;
     
@@ -189,6 +197,7 @@ const ChartCanvas: React.FC<ChartCanvasProps> = ({
             key={chart.id} 
             id={chart.id} 
             onClose={onRemoveChart}
+            onDeleteSeries={(seriesId: string) => handleDeleteSeries(chart.id, seriesId)}
             dataSeries={chart.dataSeries}
             isDropTarget={isDropTarget}
             gridSize={gridSize}

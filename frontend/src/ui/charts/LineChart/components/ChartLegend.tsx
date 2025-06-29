@@ -16,6 +16,7 @@ interface ChartLegendProps {
   setSeriesAxisAssignment: React.Dispatch<React.SetStateAction<{[key: string]: 'y' | 'y2'}>>;
   handleSeriesSubmit: (e: React.FormEvent, seriesKey: string) => void;
   handleCarouselNext: () => void;
+  onDeleteSeries?: (seriesId: string) => void;
   
   // Refs
   seriesInputRef: React.RefObject<HTMLInputElement | null>;
@@ -49,6 +50,7 @@ export const ChartLegend: React.FC<ChartLegendProps> = ({
   setSeriesAxisAssignment,
   handleSeriesSubmit,
   handleCarouselNext,
+  onDeleteSeries,
   seriesInputRef,
   visibleItems,
   canScrollNext,
@@ -125,6 +127,24 @@ export const ChartLegend: React.FC<ChartLegendProps> = ({
                     outline: 'none'
                   }}
                 />
+                {onDeleteSeries && (
+                  <button
+                    type="button"
+                    onMouseDown={() => onDeleteSeries(s.id)}
+                    title="Remove series"
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#ef4444',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      padding: '0 4px'
+                    }}
+                  >
+                    ✕
+                  </button>
+                )}
               </form>
             ) : (
               <span 
@@ -159,9 +179,9 @@ export const ChartLegend: React.FC<ChartLegendProps> = ({
               }}
               title={`Switch to ${seriesAxisAssignment[s.dataKey] === 'y2' ? 'left' : 'right'} axis`}
               style={{
-                background: seriesAxisAssignment[s.dataKey] === 'y2' ? '#ef4444' : '#10b981',
-                color: 'white',
-                border: 'none',
+                background: 'transparent',
+                color: '#000000',
+                border: '1px solid #000000',
                 borderRadius: '4px',
                 padding: '2px 6px',
                 fontSize: '10px',

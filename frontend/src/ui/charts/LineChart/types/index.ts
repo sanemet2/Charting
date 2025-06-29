@@ -5,6 +5,7 @@ export interface DataPoint {
 }
 
 export interface Series {
+  id: string; // Keep original ID for deletion
   name: string;
   dataKey: string;
   color?: string;
@@ -13,6 +14,7 @@ export interface Series {
 export interface LineChartProps {
   id: string;
   onClose: (id: string) => void;
+  onDeleteSeries?: (seriesId: string) => void;
   data?: DataPoint[];
   series?: Series[];
   dataSeries?: import('../../../../core/models/DataTypes').DataSeries[];

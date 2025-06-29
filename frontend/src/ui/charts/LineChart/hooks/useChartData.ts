@@ -125,6 +125,7 @@ export const useChartData = ({
     const colors = ['#6366f1', '#f43f5e', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4'];
     
     return dataSeries.map((series, index) => ({
+      id: series.id,
       name: series.name,
       dataKey: series.id,
       color: colors[index % colors.length]
