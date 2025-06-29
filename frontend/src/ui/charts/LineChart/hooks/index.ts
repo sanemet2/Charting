@@ -1,18 +1,20 @@
 // Export all LineChart hooks from a single entry point
 
-// 🎯 REFACTORED HOOKS (New Architecture)
+// 🎯 NEW ARCHITECTURE: State-first hooks
 export { useChartState } from './useChartState';
 export { useChartActions } from './useChartActions';
 export { useLegendCarousel } from './useLegendCarousel';
 export { useSimpleResponsive } from './useSimpleResponsive';
 
-// 🔄 EXISTING HOOKS (Legacy - can be gradually replaced)
-export { useChartData } from './useChartData';
-export { useAxisAssignment } from './useAxisAssignment';
-export { useResponsiveSettings } from './useResponsiveSettings';
+// 🎯 KEEP: Plotly configuration hook (updated to use new state)
 export { usePlotlyConfig } from './usePlotlyConfig';
-export { useInlineEditing } from './useInlineEditing';
-export { useLegend } from './useLegend';
+
+// 🎯 OLD ARCHITECTURE: These will be deleted after integration
+// export { useChartData } from './useChartData';
+// export { useAxisAssignment } from './useAxisAssignment';
+// export { useLegend } from './useLegend';
+// export { useResponsiveSettings } from './useResponsiveSettings';
+// export { useInlineEditing } from './useInlineEditing';
 
 // 🎉 REFACTORING STRATEGY: 
 // 1. New components can use the new hooks immediately

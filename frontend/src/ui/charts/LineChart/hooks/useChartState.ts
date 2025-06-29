@@ -41,6 +41,7 @@ type ChartAction =
   | { type: 'SET_SERIES_AXIS'; payload: { seriesKey: string; axis: 'y' | 'y2' } }
   | { type: 'SET_EDITING_SERIES'; payload: string | null }
   | { type: 'SET_CAROUSEL_OFFSET'; payload: number }
+  | { type: 'SET_LEGEND_HEIGHT'; payload: number }
   | { type: 'SET_CHART_TITLE'; payload: string }
   | { type: 'SET_EDITING_TITLE'; payload: boolean }
   | { type: 'PROCESS_DATA' }
@@ -60,7 +61,7 @@ const initialState: ChartState = {
   seriesAxisAssignment: {},
   editingSeries: null,
   carouselOffset: 0,
-  legendHeight: 0,
+  legendHeight: 30,
   shouldShowLegend: true,
   chartTitle: 'Line Chart',
   isEditingTitle: false
@@ -162,12 +163,21 @@ const chartReducer = (state: ChartState, action: ChartAction): ChartState => {
       };
       
     case 'SET_CONTAINER_DIMENSIONS':
+      if (
+        state.containerDimensions.width === action.payload.width &&
+        state.containerDimensions.height === action.payload.height
+      ) {
+        return state;
+      }
       return {
         ...state,
         containerDimensions: action.payload
       };
       
     case 'SET_DIMENSIONS_STABLE':
+      if (state.isDimensionsStable === action.payload) {
+        return state;
+      }
       return {
         ...state,
         isDimensionsStable: action.payload
@@ -201,6 +211,15 @@ const chartReducer = (state: ChartState, action: ChartAction): ChartState => {
       return {
         ...state,
         carouselOffset: action.payload
+      };
+      
+    case 'SET_LEGEND_HEIGHT':
+      if (state.legendHeight === action.payload) {
+        return state; // Bail out if height hasn't changed
+      }
+      return {
+        ...state,
+        legendHeight: action.payload
       };
       
     case 'SET_CHART_TITLE':

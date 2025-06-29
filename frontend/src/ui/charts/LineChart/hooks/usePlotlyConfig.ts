@@ -234,27 +234,33 @@ export const usePlotlyConfig = ({
       leftAxisRange
     });
     
+    // Use the responsive settings for the base margin
+    const finalMargin = {
+      ...responsiveSettings.margin,
+      l: hasLeftAxisData ? responsiveSettings.margin.l : 20,
+      r: hasRightAxisData ? responsiveSettings.margin.r : 20,
+    };
+
     return {
       title: {
         text: '',
         font: { size: responsiveSettings.titleSize }
       },
       xaxis: {
-        title: { 
-          text: settings.axisLabels.xAxis || '',
-          font: { size: responsiveSettings.fontSize }
-        },
-        showgrid: settings.showGrid,
-        gridcolor: '#f0f0f0',
+        type: 'date',
         tickformat: responsiveSettings.dateFormat,
-        tickangle: 0,
-        tickfont: { size: responsiveSettings.fontSize },
-        tickmode: 'auto',
-        nticks: 6,
+        tickfont: {
+          size: responsiveSettings.fontSize * 0.9,
+          color: '#000000'
+        },
+        nticks: responsiveSettings.nticks,
+        showgrid: settings.showGrid,
+        zeroline: false,
         showline: true,
         linewidth: 1,
         linecolor: '#d1d5db',
-        mirror: true
+        mirror: true,
+        tickpadding: 40,
       },
       yaxis: {
         title: { 
@@ -271,7 +277,7 @@ export const usePlotlyConfig = ({
         side: 'left',
         nticks: responsiveSettings.nticks,
         tickfont: { 
-          size: responsiveSettings.fontSize,
+          size: responsiveSettings.fontSize * 0.9,
           color: hasLeftAxisData ? '#000000' : 'rgba(0,0,0,0)'
         },
         showline: true,
@@ -288,7 +294,8 @@ export const usePlotlyConfig = ({
         autorange: hasLeftAxisData,
         range: leftAxisRange,
         domain: [0, 1],
-        rangemode: 'tozero'
+        rangemode: 'tozero',
+        tickangle: 0
       },
       yaxis2: {
         title: { 
@@ -305,7 +312,10 @@ export const usePlotlyConfig = ({
         side: 'right',
         overlaying: 'y',
         nticks: responsiveSettings.nticks,
-        tickfont: { size: responsiveSettings.fontSize },
+        tickfont: {
+          size: responsiveSettings.fontSize * 0.9,
+          color: '#000000'
+        },
         showline: true,
         linewidth: 1,
         linecolor: '#d1d5db',
@@ -319,17 +329,13 @@ export const usePlotlyConfig = ({
         autorange: hasRightAxisData ? true : false,
         range: hasRightAxisData ? undefined : [0, 1],
         domain: [0, 1],
-        rangemode: hasRightAxisData ? 'tozero' : 'normal'
+        rangemode: hasRightAxisData ? 'tozero' : 'normal',
+        tickangle: 0
       },
       hovermode: settings.showTooltip ? ('closest' as const) : (false as const),
       dragmode: 'pan' as const,
       scrollZoom: true,
-      margin: {
-        ...responsiveSettings.margin,
-        l: dynamicMargins.l,
-        r: dynamicMargins.r,
-        b: Math.max(10, responsiveSettings.margin.b - 20) // Reduce bottom margin by 20px, minimum 10px
-      },
+      margin: finalMargin,
       autosize: true,
       width: undefined,
       height: undefined,

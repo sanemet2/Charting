@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { DataSeries } from '../../../../core/models/DataTypes';
 import { DataPoint, Series } from '../types';
 
@@ -42,6 +42,10 @@ export const useChartActions = (dispatch: React.Dispatch<any>) => {
     dispatch({ type: 'SET_CAROUSEL_OFFSET', payload: offset });
   }, [dispatch]);
 
+  const setLegendHeight = useCallback((height: number) => {
+    dispatch({ type: 'SET_LEGEND_HEIGHT', payload: height });
+  }, [dispatch]);
+
   const nextCarouselPage = useCallback((maxVisibleItems: number, totalItems: number) => {
     dispatch({ 
       type: 'SET_CAROUSEL_OFFSET', 
@@ -61,7 +65,7 @@ export const useChartActions = (dispatch: React.Dispatch<any>) => {
     dispatch({ type: 'SET_EDITING_TITLE', payload: editing });
   }, [dispatch]);
 
-  return {
+  return useMemo(() => ({
     // Data actions
     setRawData,
     setGridSize,
@@ -78,10 +82,26 @@ export const useChartActions = (dispatch: React.Dispatch<any>) => {
     
     // Legend actions
     setCarouselOffset,
+    setLegendHeight,
     nextCarouselPage,
     
     // Title actions
     setChartTitle,
     setEditingTitle
-  };
+  }), [
+    dispatch, 
+    setRawData, 
+    setGridSize, 
+    setContainerDimensions, 
+    setDimensionsStable, 
+    updateSeriesName, 
+    setSeriesAxis, 
+    toggleSeriesAxis, 
+    setEditingSeries, 
+    setCarouselOffset,
+    setLegendHeight,
+    nextCarouselPage, 
+    setChartTitle, 
+    setEditingTitle
+  ]);
 }; 

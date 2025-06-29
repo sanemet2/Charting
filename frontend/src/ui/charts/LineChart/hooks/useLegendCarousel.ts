@@ -1,5 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { Series } from '../types';
+import { measureText } from '../utils/measureText';
 
 interface UseLegendCarouselProps {
   processedSeries: Series[];
@@ -16,6 +17,7 @@ interface LegendCarouselData {
   visibleItems: Series[];
   canScrollNext: boolean;
   maxVisibleItems: number;
+  seriesInputRef: React.RefObject<HTMLInputElement | null>;
 }
 
 export const useLegendCarousel = ({
@@ -25,56 +27,61 @@ export const useLegendCarousel = ({
   containerWidth,
   fontSize
 }: UseLegendCarouselProps): LegendCarouselData => {
+  const seriesInputRef = useRef<HTMLInputElement | null>(null);
   
   return useMemo(() => {
-    // Early return for simple cases
-    if (processedSeries.length <= 2) {
+    if (processedSeries.length <= 1) {
       return {
         hasOverflow: false,
         maxOffset: 0,
         currentOffset: 0,
         visibleItems: processedSeries,
         canScrollNext: false,
-        maxVisibleItems: 2
+        maxVisibleItems: processedSeries.length,
+        seriesInputRef
       };
     }
 
-    // Calculate item widths
-    const itemPadding = 24;
-    const avgCharWidth = fontSize * 0.6;
-    const iconWidths = 60;
+    // --- More robust width calculation ---
+    const itemPadding = 16; 
+    const iconWidths = 52; // Width of color square + L/R button + gaps
+    const font = `${fontSize}px "Inter", sans-serif`;
+    const carouselButtonWidth = 30; // Approx. width of the '...' button + its gap
 
-    let totalItemsWidth = 0;
+    const itemWidths = processedSeries.map(s => {
+      const name = seriesNames[s.dataKey] || s.name;
+      const textWidth = measureText(name, font);
+      return textWidth + iconWidths + itemPadding;
+    });
+
+    const totalItemsWidth = itemWidths.reduce((sum, width) => sum + width, 0);
+    const doesOverflow = totalItemsWidth > containerWidth;
+
+    const availableWidth = doesOverflow ? containerWidth - carouselButtonWidth : containerWidth;
+
     let maxVisibleItems = 0;
-
-    for (const series of processedSeries) {
-      const name = seriesNames[series.dataKey] || series.name;
-      const itemWidth = (name.length * avgCharWidth) + iconWidths + itemPadding;
-      
-      if (totalItemsWidth + itemWidth > containerWidth && maxVisibleItems > 0) {
+    let currentWidth = 0;
+    for (const width of itemWidths) {
+      if (currentWidth + width > availableWidth) {
         break;
       }
-      
-      totalItemsWidth += itemWidth;
+      currentWidth += width;
       maxVisibleItems++;
     }
-
-    // Ensure at least one item is shown
-    if (processedSeries.length > 0 && maxVisibleItems === 0) {
-      maxVisibleItems = 1;
-    }
-
+    
     const hasOverflow = processedSeries.length > maxVisibleItems;
-    const maxOffset = hasOverflow ? processedSeries.length - maxVisibleItems : 0;
+    const maxOffset = hasOverflow ? Math.max(0, processedSeries.length - maxVisibleItems) : 0;
     const currentOffset = Math.min(carouselOffset, maxOffset);
+    const canScrollNext = hasOverflow;
 
     return {
       hasOverflow,
       maxOffset,
       currentOffset,
       visibleItems: processedSeries.slice(currentOffset, currentOffset + maxVisibleItems),
-      canScrollNext: hasOverflow,
-      maxVisibleItems
+      canScrollNext,
+      maxVisibleItems,
+      seriesInputRef
     };
   }, [processedSeries, seriesNames, carouselOffset, containerWidth, fontSize]);
 }; 

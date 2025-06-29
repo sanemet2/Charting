@@ -1,30 +1,30 @@
-import React from 'react';
+import React, { useRef, useLayoutEffect } from 'react';
 import { Series } from '../types';
 
 interface ChartLegendProps {
   // Data
   processedSeries: Series[];
-  seriesNames: {[key: string]: string};
-  seriesAxisAssignment: {[key: string]: 'y' | 'y2'};
-  
+  seriesNames: { [key: string]: string };
+  seriesAxisAssignment: { [key: string]: 'y' | 'y2' };
+
   // State
   editingSeries: string | null;
-  
+
   // Handlers
-  setSeriesNames: React.Dispatch<React.SetStateAction<{[key: string]: string}>>;
+  setSeriesNames: React.Dispatch<React.SetStateAction<{ [key: string]: string }>>;
   setEditingSeries: React.Dispatch<React.SetStateAction<string | null>>;
-  setSeriesAxisAssignment: React.Dispatch<React.SetStateAction<{[key: string]: 'y' | 'y2'}>>;
-  handleSeriesSubmit: (e: React.FormEvent, seriesKey: string) => void;
+  setSeriesAxisAssignment: React.Dispatch<React.SetStateAction<{ [key: string]: 'y' | 'y2' }>>;
   handleCarouselNext: () => void;
+  onHeightChange: (height: number) => void;
   onDeleteSeries?: (seriesId: string) => void;
-  
+
   // Refs
   seriesInputRef: React.RefObject<HTMLInputElement | null>;
-  
+
   // Carousel data
   visibleItems: Series[];
   canScrollNext: boolean;
-  
+
   // Styling
   legendStyle: React.CSSProperties;
   settings: {
@@ -33,7 +33,7 @@ interface ChartLegendProps {
       secondary: string;
     };
   };
-  
+
   // Container awareness
   isNarrow?: boolean;
   isVerySmall?: boolean;
@@ -48,19 +48,24 @@ export const ChartLegend: React.FC<ChartLegendProps> = ({
   setSeriesNames,
   setEditingSeries,
   setSeriesAxisAssignment,
-  handleSeriesSubmit,
   handleCarouselNext,
+  onHeightChange,
   onDeleteSeries,
   seriesInputRef,
   visibleItems,
   canScrollNext,
   legendStyle,
   settings,
-  isNarrow = false,
-  isVerySmall = false,
-  containerDimensions = { width: 0, height: 0 }
 }) => {
-  // 🔧 FIX: Grid-based responsive styling (no container dependencies)
+  const legendRef = useRef<HTMLDivElement>(null);
+  const [editingValue, setEditingValue] = React.useState('');
+
+  useLayoutEffect(() => {
+    if (legendRef.current) {
+      onHeightChange(legendRef.current.offsetHeight);
+    }
+  });
+
   const gridSettings = {
     '1x1': { gap: '16px', itemGap: '6px', colorSize: '12px', buttonSize: '20px', carouselSize: '22px' },
     '2x2': { gap: '12px', itemGap: '5px', colorSize: '10px', buttonSize: '18px', carouselSize: '20px' },
@@ -68,162 +73,100 @@ export const ChartLegend: React.FC<ChartLegendProps> = ({
     '4x4': { gap: '10px', itemGap: '4px', colorSize: '8px', buttonSize: '16px', carouselSize: '18px' },
     '5x5': { gap: '8px', itemGap: '3px', colorSize: '8px', buttonSize: '16px', carouselSize: '18px' }
   };
-  
-  // Use fontSize to determine grid size (simplified approach)
-  const fontSize = typeof legendStyle.fontSize === 'string' ? 
-    parseInt(legendStyle.fontSize) : 
-    (typeof legendStyle.fontSize === 'number' ? legendStyle.fontSize : 11);
-  
-  const currentGridSize = fontSize >= 14 ? '1x1' :
-                         fontSize >= 12 ? '2x2' :
-                         fontSize >= 11 ? '3x3' :
-                         fontSize >= 10 ? '4x4' : '5x5';
-  
+
+  const fontSize = typeof legendStyle.fontSize === 'string' ? parseInt(legendStyle.fontSize) : (typeof legendStyle.fontSize === 'number' ? legendStyle.fontSize : 11);
+  const currentGridSize = fontSize >= 14 ? '1x1' : fontSize >= 12 ? '2x2' : fontSize >= 11 ? '3x3' : fontSize >= 10 ? '4x4' : '5x5';
   const adaptive = gridSettings[currentGridSize as keyof typeof gridSettings];
 
+  const handleEditStart = (seriesKey: string, currentName: string) => {
+    setEditingValue(currentName);
+    setEditingSeries(seriesKey);
+  };
+
+  const handleEditSubmit = (e: React.FormEvent, seriesKey: string) => {
+    e.preventDefault();
+    setSeriesNames(prev => ({ ...prev, [seriesKey]: editingValue }));
+    setEditingSeries(null);
+  };
+
+  const handleEditCancel = () => {
+    setEditingSeries(null);
+    setEditingValue('');
+  };
+
   return (
-    <div className="chart-legend" style={legendStyle}>
-      <div className="legend-content" style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: adaptive.gap,
-        justifyContent: 'inherit',
-        width: '100%',
-        height: '100%'
-      }}>
-        {/* Legend Items */}
-        {visibleItems.map((s, index) => (
-          <div key={`${s.dataKey}-${index}`} className="legend-item" style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: adaptive.itemGap
-          }}>
-            {/* Color indicator */}
-            <div 
-              className="legend-color" 
-              style={{ 
+    <div className="chart-legend" style={legendStyle} ref={legendRef}>
+      <div
+        className="legend-content"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: adaptive.gap,
+          width: '100%',
+          height: '100%',
+          overflow: 'hidden',
+        }}
+      >
+        {visibleItems.map((s) => (
+          <div key={s.dataKey} className="legend-item" style={{ display: 'flex', alignItems: 'center', gap: adaptive.itemGap, flexShrink: 0 }}>
+            <div
+              className="legend-color"
+              style={{
                 width: adaptive.colorSize,
                 height: adaptive.colorSize,
-                backgroundColor: s.color || (index === 0 ? settings.colors.primary : settings.colors.secondary),
-                borderRadius: '2px'
+                backgroundColor: s.color || settings.colors.primary,
+                borderRadius: '2px',
+                flexShrink: 0,
               }}
             />
-            
-            {/* Series name (editable) */}
             {editingSeries === s.dataKey ? (
-              <form onSubmit={(e) => handleSeriesSubmit(e, s.dataKey)} style={{ display: 'inline' }}>
+              <form onSubmit={(e) => handleEditSubmit(e, s.dataKey)} style={{ display: 'flex', alignItems: 'center' }}>
                 <input
                   ref={seriesInputRef}
                   type="text"
-                  value={seriesNames[s.dataKey] || s.name}
-                  onChange={(e) => setSeriesNames(prev => ({ ...prev, [s.dataKey]: e.target.value }))}
-                  onBlur={() => setEditingSeries(null)}
-                  style={{
-                    border: '1px solid #6366f1',
-                    borderRadius: '4px',
-                    padding: '2px 6px',
-                    fontSize: '10px',
-                    fontFamily: 'inherit',
-                    outline: 'none'
-                  }}
+                  value={editingValue}
+                  onChange={(e) => setEditingValue(e.target.value)}
+                  onBlur={handleEditCancel}
+                  onKeyDown={(e) => { if (e.key === 'Escape') handleEditCancel(); }}
+                  style={{ border: '1px solid #6366f1', borderRadius: '4px', padding: '2px 6px', fontSize: '10px', fontFamily: 'inherit', outline: 'none', width: '100px' }}
                 />
-                {onDeleteSeries && (
-                  <button
-                    type="button"
-                    onMouseDown={() => onDeleteSeries(s.id)}
-                    title="Remove series"
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      color: '#ef4444',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      fontWeight: 'bold',
-                      padding: '0 4px'
-                    }}
-                  >
-                    ✕
-                  </button>
-                )}
               </form>
             ) : (
-              <span 
-                onClick={() => setEditingSeries(s.dataKey)}
+              <span
+                onClick={() => handleEditStart(s.dataKey, seriesNames[s.dataKey] || s.name)}
                 title={`${seriesNames[s.dataKey] || s.name} - Click to edit`}
-                style={{
-                  cursor: 'pointer',
-                  userSelect: 'none',
-                  padding: '2px 4px',
-                  borderRadius: '4px',
-                  transition: 'background-color 0.2s'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = 'rgba(99, 102, 241, 0.1)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                }}
+                style={{ cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '150px' }}
               >
                 {seriesNames[s.dataKey] || s.name}
               </span>
             )}
-            
-            {/* Axis toggle button */}
             <button
               onClick={() => {
                 const newAxis = seriesAxisAssignment[s.dataKey] === 'y2' ? 'y' : 'y2';
-                setSeriesAxisAssignment(prev => ({
-                  ...prev,
-                  [s.dataKey]: newAxis
-                }));
+                setSeriesAxisAssignment(prev => ({ ...prev, [s.dataKey]: newAxis }));
               }}
               title={`Switch to ${seriesAxisAssignment[s.dataKey] === 'y2' ? 'left' : 'right'} axis`}
               style={{
-                background: 'transparent',
-                color: '#000000',
-                border: '1px solid #000000',
-                borderRadius: '4px',
-                padding: '2px 6px',
-                fontSize: '10px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                minWidth: adaptive.buttonSize,
-                height: adaptive.buttonSize,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
+                background: 'transparent', color: '#000000', border: '1px solid #000000', borderRadius: '4px',
+                padding: '2px 6px', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer',
+                minWidth: adaptive.buttonSize, height: adaptive.buttonSize, display: 'flex',
+                alignItems: 'center', justifyContent: 'center', flexShrink: 0
               }}
             >
               {seriesAxisAssignment[s.dataKey] === 'y2' ? 'R' : 'L'}
             </button>
           </div>
         ))}
-        
-        {/* Carousel button */}
         {canScrollNext && (
-          <button 
+          <button
             onClick={handleCarouselNext}
             title="Click to see more series"
             style={{
-              background: 'rgba(99, 102, 241, 0.1)',
-              color: '#6366f1',
-              fontSize: '10px',
-              fontWeight: 'bold',
-              width: adaptive.carouselSize,
-              height: adaptive.carouselSize,
-              border: '1px solid rgba(99, 102, 241, 0.3)',
-              borderRadius: '50%',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(99, 102, 241, 0.2)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(99, 102, 241, 0.1)';
+              background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1', fontSize: '10px', fontWeight: 'bold',
+              width: adaptive.carouselSize, height: adaptive.carouselSize, border: '1px solid rgba(99, 102, 241, 0.3)',
+              borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'all 0.2s ease', flexShrink: 0
             }}
           >
             •••

@@ -1,18 +1,28 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 
 interface UseSimpleResponsiveProps {
   containerRef: React.RefObject<HTMLDivElement | null>;
   gridSize: string;
 }
 
+interface ResponsiveSettings {
+  fontSize: number;
+  titleSize: number;
+  margin: {
+    l: number;
+    r: number;
+    t: number;
+    b: number;
+  };
+  nticks: number;
+  dateFormat: string;
+  sampleRate: number;
+}
+
 interface ResponsiveData {
   containerDimensions: { width: number; height: number };
   isDimensionsStable: boolean;
-  responsiveSettings: {
-    fontSize: number;
-    padding: string;
-    itemGap: string;
-  };
+  responsiveSettings: ResponsiveSettings;
   isNarrow: boolean;
   isVerySmall: boolean;
 }
@@ -24,15 +34,51 @@ export const useSimpleResponsive = ({
   
   const [containerDimensions, setContainerDimensions] = useState({ width: 0, height: 0 });
   const [isDimensionsStable, setIsDimensionsStable] = useState(false);
+  const stabilityTimer = useRef<NodeJS.Timeout | null>(null);
 
   // Responsive settings based on grid size only
-  const responsiveSettings = useMemo(() => {
+  const responsiveSettings = useMemo((): ResponsiveSettings => {
     const gridSettings = {
-      '1x1': { fontSize: 14, padding: '8px 16px', itemGap: '6px' },
-      '2x2': { fontSize: 12, padding: '6px 12px', itemGap: '5px' },
-      '3x3': { fontSize: 11, padding: '6px 12px', itemGap: '4px' },
-      '4x4': { fontSize: 10, padding: '5px 10px', itemGap: '4px' },
-      '5x5': { fontSize: 9, padding: '4px 8px', itemGap: '3px' }
+      '1x1': { 
+        fontSize: 14, 
+        titleSize: 16,
+        margin: { l: 60, r: 60, t: 40, b: 40 },
+        nticks: 8,
+        dateFormat: '%b-%Y',
+        sampleRate: 1
+      },
+      '2x2': { 
+        fontSize: 12, 
+        titleSize: 14,
+        margin: { l: 50, r: 50, t: 35, b: 35 },
+        nticks: 6,
+        dateFormat: '%b-%Y',
+        sampleRate: 2
+      },
+      '3x3': { 
+        fontSize: 11, 
+        titleSize: 13,
+        margin: { l: 45, r: 45, t: 30, b: 30 },
+        nticks: 5,
+        dateFormat: '%b-%Y',
+        sampleRate: 5
+      },
+      '4x4': { 
+        fontSize: 10, 
+        titleSize: 12,
+        margin: { l: 40, r: 40, t: 25, b: 25 },
+        nticks: 4,
+        dateFormat: '%b-%Y',
+        sampleRate: 10
+      },
+      '5x5': { 
+        fontSize: 9, 
+        titleSize: 11,
+        margin: { l: 35, r: 35, t: 20, b: 20 },
+        nticks: 3,
+        dateFormat: '%b-%Y',
+        sampleRate: 20
+      }
     };
     
     return gridSettings[gridSize as keyof typeof gridSettings] || gridSettings['3x3'];
@@ -48,12 +94,15 @@ export const useSimpleResponsive = ({
         const { width, height } = entry.contentRect;
         setContainerDimensions({ width, height });
         
-        // Mark as stable after a short delay
-        const timer = setTimeout(() => {
-          setIsDimensionsStable(true);
-        }, 100);
+        // Clear previous timer to prevent race conditions
+        if (stabilityTimer.current) {
+          clearTimeout(stabilityTimer.current);
+        }
         
-        return () => clearTimeout(timer);
+        // Mark as stable after a short delay
+        stabilityTimer.current = setTimeout(() => {
+          setIsDimensionsStable(true);
+        }, 150); // Use a slightly longer delay
       }
     });
 
@@ -61,17 +110,30 @@ export const useSimpleResponsive = ({
     
     return () => {
       resizeObserver.disconnect();
+      if (stabilityTimer.current) {
+        clearTimeout(stabilityTimer.current);
+      }
     };
   }, [containerRef]);
 
   // Reset stability when grid size changes
   useEffect(() => {
     setIsDimensionsStable(false);
-    const timer = setTimeout(() => {
+    
+    // When grid size changes, we need to re-stabilize
+    if (stabilityTimer.current) {
+      clearTimeout(stabilityTimer.current);
+    }
+    
+    stabilityTimer.current = setTimeout(() => {
       setIsDimensionsStable(true);
     }, 150);
     
-    return () => clearTimeout(timer);
+    return () => {
+      if (stabilityTimer.current) {
+        clearTimeout(stabilityTimer.current);
+      }
+    };
   }, [gridSize]);
 
   // Simple breakpoint calculations

@@ -93,6 +93,11 @@
   font-size: 12px;
 }
 
+.chart-content {
+  position: relative;
+  z-index: 1;
+}
+
 .chart-actions {
   display: flex;
   gap: 8px;
