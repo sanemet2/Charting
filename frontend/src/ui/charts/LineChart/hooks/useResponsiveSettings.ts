@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, RefObject } from 'react';
+import { useMemo, useState, useEffect, RefObject, useRef } from 'react';
 import { debug, debugCategories } from '../utils/debug';
 
 interface ResponsiveSettings {
@@ -43,7 +43,7 @@ export const useResponsiveSettings = ({
   // Reset stability when grid size changes
   useEffect(() => {
     if (lastGridSize !== gridSize) {
-      debug(debugCategories.RESPONSIVE, {
+            debug(debugCategories.RESPONSIVE, {
         message: 'Grid changed, marking dimensions as unstable',
         from: lastGridSize,
         to: gridSize
@@ -73,15 +73,23 @@ export const useResponsiveSettings = ({
         const { width, height } = entries[0].contentRect;
         
         setContainerDimensions(prevDimensions => {
+          const widthChange = prevDimensions.width - width;
+          const heightChange = prevDimensions.height - height;
           const hasChanged = prevDimensions.width !== width || prevDimensions.height !== height;
           
+          // 🔍 DEBUG: Detailed resize event analysis 
+          debug(debugCategories.RESPONSIVE, {
+            message: hasChanged ? '🚨 RESIZE EVENT TRIGGERED 🚨' : 'RESIZE EVENT - No change',
+            gridSize,
+            prevDimensions,
+            newDimensions: { width, height },
+            changes: { widthChange, heightChange },
+            changeAmount: Math.abs(widthChange) + Math.abs(heightChange),
+            isSubPixel: Math.abs(widthChange) < 1 && Math.abs(heightChange) < 1,
+            timestamp: Date.now()
+          });
+          
           if (hasChanged) {
-            debug(debugCategories.RESPONSIVE, {
-              message: 'Container resize detected',
-              gridSize,
-              newDimensions: { width, height }
-            });
-            
             // Mark as stable after dimensions settle
             setTimeout(() => {
               setIsDimensionsStable(true);
@@ -121,7 +129,7 @@ export const useResponsiveSettings = ({
         nticks: 8, dateFormat: '%b %Y', sampleRate: 3
       },
       '3x3': { 
-        fontSize: 12, titleSize: 14, margin: { l: 50, r: 50, t: 10, b: 65 },
+        fontSize: 12, titleSize: 14, margin: { l: 50, r: 50, t: 10, b: 80 },
         nticks: 6, dateFormat: '%b %y', sampleRate: 5
       },
       '4x4': { 

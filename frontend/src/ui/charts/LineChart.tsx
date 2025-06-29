@@ -63,6 +63,26 @@ const LineChart: React.FC<LineChartProps> = ({
     gridSize
   });
 
+  // 🔧 DEBUG: Plotly event handlers to understand pan end behavior
+  const handlePlotlyRelayout = (eventData: any) => {
+    debug(debugCategories.PLOTLY_CONFIG, {
+      message: '🚨 PLOTLY RELAYOUT EVENT (Pan End?)',
+      eventData: Object.keys(eventData),
+      hasXAxisRange: !!eventData['xaxis.range[0]'],
+      hasYAxisRange: !!eventData['yaxis.range[0]'],
+      gridSize,
+      timestamp: Date.now()
+    });
+  };
+
+  const handlePlotlyRedraw = () => {
+    debug(debugCategories.PLOTLY_CONFIG, {
+      message: '🚨 PLOTLY REDRAW EVENT',
+      gridSize,
+      timestamp: Date.now()
+    });
+  };
+
   // 🎯 REFACTORED: Legend logic extracted to useLegend hook
   const legendData = useLegend({
     processedSeries,
@@ -196,6 +216,8 @@ const LineChart: React.FC<LineChartProps> = ({
                   style={{ width: '100%', height: '100%' }}
                   useResizeHandler={true}
                   revision={plotRevision}
+                  onRelayout={handlePlotlyRelayout}
+                  onRedraw={handlePlotlyRedraw}
                 />
               </div>
               {/* New Legend Component - Below Chart */}

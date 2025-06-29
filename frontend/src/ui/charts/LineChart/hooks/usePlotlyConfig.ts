@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { DataPoint, Series } from '../types';
 import { ChartSettings } from '../../../components/ChartSettingsModal';
 import { debug, debugCategories } from '../utils/debug';
+import { measureText } from '../utils/measureText';
 
 interface ResponsiveSettings {
   fontSize: number;
@@ -148,6 +149,53 @@ export const usePlotlyConfig = ({
     plotlyDataCount: plotlyData.length
   });
 
+  // 🔧 DYNAMIC MARGINS: Calculate margins based on axis label widths
+  const dynamicMargins = useMemo(() => {
+    const font = `${responsiveSettings.fontSize}px Arial, sans-serif`;
+    const TICK_PADDING = 20; // Extra space for tick marks and general padding
+
+    let leftMargin = responsiveSettings.margin.l;
+    let rightMargin = responsiveSettings.margin.r;
+
+    // Helper to format numbers with commas
+    const formatter = new Intl.NumberFormat('en-US');
+
+    // Calculate left margin
+    if (hasLeftAxisData) {
+      const leftTraces = plotlyData.filter(t => !t.yaxis || t.yaxis === 'y');
+      const allLeftYValues = leftTraces.flatMap(t => t.y || []).filter(v => v !== null);
+      if (allLeftYValues.length > 0) {
+        const min = Math.min(...allLeftYValues);
+        const max = Math.max(...allLeftYValues);
+        const widestLabel = formatter.format(min).length > formatter.format(max).length ? min : max;
+        const widestLabelWidth = measureText(formatter.format(widestLabel), font);
+        leftMargin = widestLabelWidth + TICK_PADDING;
+      }
+    }
+
+    // Calculate right margin
+    if (hasRightAxisData) {
+      const rightTraces = plotlyData.filter(t => t.yaxis === 'y2');
+      const allRightYValues = rightTraces.flatMap(t => t.y || []).filter(v => v !== null);
+      if (allRightYValues.length > 0) {
+        const min = Math.min(...allRightYValues);
+        const max = Math.max(...allRightYValues);
+        const widestLabel = formatter.format(min).length > formatter.format(max).length ? min : max;
+        const widestLabelWidth = measureText(formatter.format(widestLabel), font);
+        rightMargin = widestLabelWidth + TICK_PADDING;
+      }
+    }
+    
+    debug(debugCategories.PLOTLY_CONFIG, {
+      message: 'Dynamic margin calculation',
+      leftMargin,
+      rightMargin,
+      font
+    });
+
+    return { l: leftMargin, r: rightMargin };
+  }, [plotlyData, hasLeftAxisData, hasRightAxisData, responsiveSettings.fontSize]);
+
   // Calculate data range for right axis to sync gridlines when no left axis data
   const rightAxisDataRange = useMemo(() => {
     if (!hasRightAxisData || hasLeftAxisData) {
@@ -236,7 +284,7 @@ export const usePlotlyConfig = ({
         linewidth: 1,
         linecolor: '#d1d5db',
         mirror: true,
-        automargin: true,
+        automargin: false,
         showticklabels: hasLeftAxisData,
         ticks: hasLeftAxisData ? 'outside' : '',
         fixedrange: false,
@@ -268,7 +316,7 @@ export const usePlotlyConfig = ({
         linewidth: 1,
         linecolor: '#d1d5db',
         mirror: false,
-        automargin: true,
+        automargin: false,
         showticklabels: hasRightAxisData,
         ticks: hasRightAxisData ? 'outside' : '',
         fixedrange: false,
@@ -284,6 +332,8 @@ export const usePlotlyConfig = ({
       scrollZoom: true,
       margin: {
         ...responsiveSettings.margin,
+        l: dynamicMargins.l,
+        r: dynamicMargins.r,
         b: Math.max(10, responsiveSettings.margin.b - 20) // Reduce bottom margin by 20px, minimum 10px
       },
       autosize: true,
@@ -295,118 +345,7 @@ export const usePlotlyConfig = ({
       paper_bgcolor: 'rgba(0,0,0,0)',
       font: { family: 'Arial, sans-serif', size: responsiveSettings.fontSize }
     };
-    
-    debug(debugCategories.PLOTLY_CONFIG, {
-      message: 'Axis visibility settings',
-      leftAxisVisible: hasLeftAxisData,
-      rightAxisVisible: hasRightAxisData,
-      showGrid: settings.showGrid
-    });
-    
-    return {
-      title: {
-        text: '',
-        font: { size: responsiveSettings.titleSize }
-      },
-      xaxis: {
-        title: { 
-          text: settings.axisLabels.xAxis || '',
-          font: { size: responsiveSettings.fontSize }
-        },
-        showgrid: settings.showGrid,
-        gridcolor: '#f0f0f0',
-        tickformat: responsiveSettings.dateFormat,
-        tickangle: 0,
-        tickfont: { size: responsiveSettings.fontSize },
-        tickmode: 'auto',
-        nticks: 6,
-        showline: true,
-        linewidth: 1,
-        linecolor: '#d1d5db',
-        mirror: true
-      },
-      yaxis: {
-        title: { 
-          text: hasLeftAxisData ? (settings.axisLabels.yAxis || '') : '',
-          font: { size: responsiveSettings.fontSize }
-        },
-        showgrid: settings.showGrid,
-        gridcolor: '#f0f0f0',
-        tickformat: ',.0f',
-        tickformatstops: [
-          { dtickrange: [null, 100], value: ',.1f' },
-          { dtickrange: [100, null], value: ',.0f' }
-        ],
-        side: 'left',
-        nticks: responsiveSettings.nticks,
-        tickfont: { 
-          size: responsiveSettings.fontSize,
-          color: hasLeftAxisData ? '#000000' : 'rgba(0,0,0,0)'
-        },
-        showline: true,
-        linewidth: 1,
-        linecolor: '#d1d5db',
-        mirror: true,
-        automargin: true,
-        showticklabels: hasLeftAxisData,
-        ticks: hasLeftAxisData ? 'outside' : '',
-        fixedrange: false,
-        zeroline: false,
-        visible: true,
-        type: 'linear',
-        autorange: hasLeftAxisData,
-        range: leftAxisRange,
-        domain: [0, 1],
-        rangemode: 'tozero'
-      },
-      yaxis2: {
-        title: { 
-          text: hasRightAxisData ? (settings.axisLabels.yAxis || '') : '',
-          font: { size: responsiveSettings.fontSize }
-        },
-        showgrid: false,
-        gridcolor: '#f0f0f0',
-        tickformat: ',.0f',
-        tickformatstops: [
-          { dtickrange: [null, 100], value: ',.1f' },
-          { dtickrange: [100, null], value: ',.0f' }
-        ],
-        side: 'right',
-        overlaying: 'y',
-        nticks: responsiveSettings.nticks,
-        tickfont: { size: responsiveSettings.fontSize },
-        showline: true,
-        linewidth: 1,
-        linecolor: '#d1d5db',
-        mirror: false,
-        automargin: true,
-        showticklabels: hasRightAxisData,
-        ticks: hasRightAxisData ? 'outside' : '',
-        fixedrange: false,
-        visible: true,
-        type: 'linear',
-        autorange: hasRightAxisData ? true : false,
-        range: hasRightAxisData ? undefined : [0, 1],
-        domain: [0, 1],
-        rangemode: hasRightAxisData ? 'tozero' : 'normal'
-      },
-      hovermode: settings.showTooltip ? ('closest' as const) : (false as const),
-      dragmode: 'pan' as const,
-      scrollZoom: true,
-      margin: {
-        ...responsiveSettings.margin,
-        b: Math.max(10, responsiveSettings.margin.b - 20) // Reduce bottom margin by 20px, minimum 10px
-      },
-      autosize: true,
-      width: undefined,
-      height: undefined,
-      showlegend: false,
-      uirevision: 'constant',
-      plot_bgcolor: 'rgba(0,0,0,0)',
-      paper_bgcolor: 'rgba(0,0,0,0)',
-      font: { family: 'Arial, sans-serif', size: responsiveSettings.fontSize }
-    };
-  }, [settings, responsiveSettings, hasLeftAxisData, hasRightAxisData, rightAxisDataRange]);
+  }, [settings, responsiveSettings, hasLeftAxisData, hasRightAxisData, rightAxisDataRange, dynamicMargins]);
 
   // Plotly configuration
   const plotlyConfig = useMemo(() => ({
@@ -419,6 +358,7 @@ export const usePlotlyConfig = ({
     staticPlot: false,
     autosizable: true, // Re-enable automatic sizing
     useResizeHandler: true, // Ensure resize handling works
+
     toImageButtonOptions: {
       format: 'png',
       filename: 'chart',
