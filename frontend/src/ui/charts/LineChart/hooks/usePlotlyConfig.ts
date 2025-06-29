@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { DataPoint, Series } from '../types';
 import { ChartSettings } from '../../../components/ChartSettingsModal';
+import { debug, debugCategories } from '../utils/debug';
 
 interface ResponsiveSettings {
   fontSize: number;
@@ -88,15 +89,12 @@ export const usePlotlyConfig = ({
         visible: true
       };
       
-      // 🔍 DEBUG: Log detailed trace info
-      console.log(`🔍 TRACE CREATION DEBUG for ${s.name}:`, {
+      debug(debugCategories.PLOTLY_CONFIG, {
+        message: `Trace creation for ${s.name}`,
         dataKey: s.dataKey,
         assignedAxis: seriesAxisAssignment[s.dataKey],
         finalTraceAxis: trace.yaxis,
-        dataLength: trace.y.length,
-        firstFewYValues: trace.y.slice(0, 5),
-        traceVisible: trace.visible,
-        traceName: trace.name
+        dataLength: trace.y.length
       });
       
       return trace;
@@ -143,30 +141,29 @@ export const usePlotlyConfig = ({
     trace.yaxis === 'y2' && trace.name !== ''
   );
 
-  console.log('🔍 AXIS DATA DEBUG:', {
+  debug(debugCategories.PLOTLY_CONFIG, {
+    message: 'Axis data debug',
     hasLeftAxisData,
     hasRightAxisData,
-    plotlyDataCount: plotlyData.length,
-    firstTraceAxis: plotlyData[0]?.yaxis || 'y',
-    traceName: plotlyData[0]?.name || 'no name'
+    plotlyDataCount: plotlyData.length
   });
 
   // Calculate data range for right axis to sync gridlines when no left axis data
   const rightAxisDataRange = useMemo(() => {
     if (!hasRightAxisData || hasLeftAxisData) {
-      console.log('🔍 RIGHT AXIS RANGE DEBUG: Skipping calculation', { hasRightAxisData, hasLeftAxisData });
+      debug(debugCategories.PLOTLY_CONFIG, { message: 'Right axis range - skipping calculation', hasRightAxisData, hasLeftAxisData });
       return undefined;
     }
     
     const rightAxisTraces = plotlyData.filter(trace => trace.yaxis === 'y2');
     if (rightAxisTraces.length === 0) {
-      console.log('🔍 RIGHT AXIS RANGE DEBUG: No right axis traces found');
+      debug(debugCategories.PLOTLY_CONFIG, { message: 'Right axis range - no traces found' });
       return undefined;
     }
     
     const allYValues = rightAxisTraces.flatMap(trace => trace.y || []).filter(v => v != null && !isNaN(v));
     if (allYValues.length === 0) {
-      console.log('🔍 RIGHT AXIS RANGE DEBUG: No valid Y values found');
+      debug(debugCategories.PLOTLY_CONFIG, { message: 'Right axis range - no valid Y values' });
       return undefined;
     }
     
@@ -175,12 +172,11 @@ export const usePlotlyConfig = ({
     const padding = (max - min) * 0.1; // 10% padding
     const calculatedRange = [Math.max(0, min - padding), max + padding];
     
-    console.log('🔍 RIGHT AXIS RANGE DEBUG: Calculated range', {
+    debug(debugCategories.PLOTLY_CONFIG, {
+      message: 'Right axis range calculated',
       min,
       max,
-      padding,
-      calculatedRange,
-      yValuesSample: allYValues.slice(0, 5)
+      calculatedRange
     });
     
     return calculatedRange;
@@ -188,13 +184,122 @@ export const usePlotlyConfig = ({
 
   // Plotly layout configuration with responsive settings
   const plotlyLayout = useMemo(() => {
-    // 🔍 DEBUG: Log left axis range calculation
     const leftAxisRange = hasLeftAxisData ? undefined : (rightAxisDataRange || [0, 100]);
-    console.log('🔍 LEFT AXIS RANGE DEBUG:', {
+    debug(debugCategories.PLOTLY_CONFIG, {
+      message: 'Left axis range debug',
       hasLeftAxisData,
       hasRightAxisData,
-      rightAxisDataRange,
-      leftAxisRange,
+      leftAxisRange
+    });
+    
+    return {
+      title: {
+        text: '',
+        font: { size: responsiveSettings.titleSize }
+      },
+      xaxis: {
+        title: { 
+          text: settings.axisLabels.xAxis || '',
+          font: { size: responsiveSettings.fontSize }
+        },
+        showgrid: settings.showGrid,
+        gridcolor: '#f0f0f0',
+        tickformat: responsiveSettings.dateFormat,
+        tickangle: 0,
+        tickfont: { size: responsiveSettings.fontSize },
+        tickmode: 'auto',
+        nticks: 6,
+        showline: true,
+        linewidth: 1,
+        linecolor: '#d1d5db',
+        mirror: true
+      },
+      yaxis: {
+        title: { 
+          text: hasLeftAxisData ? (settings.axisLabels.yAxis || '') : '',
+          font: { size: responsiveSettings.fontSize }
+        },
+        showgrid: settings.showGrid,
+        gridcolor: '#f0f0f0',
+        tickformat: ',.0f',
+        tickformatstops: [
+          { dtickrange: [null, 100], value: ',.1f' },
+          { dtickrange: [100, null], value: ',.0f' }
+        ],
+        side: 'left',
+        nticks: responsiveSettings.nticks,
+        tickfont: { 
+          size: responsiveSettings.fontSize,
+          color: hasLeftAxisData ? '#000000' : 'rgba(0,0,0,0)'
+        },
+        showline: true,
+        linewidth: 1,
+        linecolor: '#d1d5db',
+        mirror: true,
+        automargin: true,
+        showticklabels: hasLeftAxisData,
+        ticks: hasLeftAxisData ? 'outside' : '',
+        fixedrange: false,
+        zeroline: false,
+        visible: true,
+        type: 'linear',
+        autorange: hasLeftAxisData,
+        range: leftAxisRange,
+        domain: [0, 1],
+        rangemode: 'tozero'
+      },
+      yaxis2: {
+        title: { 
+          text: hasRightAxisData ? (settings.axisLabels.yAxis || '') : '',
+          font: { size: responsiveSettings.fontSize }
+        },
+        showgrid: false,
+        gridcolor: '#f0f0f0',
+        tickformat: ',.0f',
+        tickformatstops: [
+          { dtickrange: [null, 100], value: ',.1f' },
+          { dtickrange: [100, null], value: ',.0f' }
+        ],
+        side: 'right',
+        overlaying: 'y',
+        nticks: responsiveSettings.nticks,
+        tickfont: { size: responsiveSettings.fontSize },
+        showline: true,
+        linewidth: 1,
+        linecolor: '#d1d5db',
+        mirror: false,
+        automargin: true,
+        showticklabels: hasRightAxisData,
+        ticks: hasRightAxisData ? 'outside' : '',
+        fixedrange: false,
+        visible: true,
+        type: 'linear',
+        autorange: hasRightAxisData ? true : false,
+        range: hasRightAxisData ? undefined : [0, 1],
+        domain: [0, 1],
+        rangemode: hasRightAxisData ? 'tozero' : 'normal'
+      },
+      hovermode: settings.showTooltip ? ('closest' as const) : (false as const),
+      dragmode: 'pan' as const,
+      scrollZoom: true,
+      margin: {
+        ...responsiveSettings.margin,
+        b: Math.max(10, responsiveSettings.margin.b - 20) // Reduce bottom margin by 20px, minimum 10px
+      },
+      autosize: true,
+      width: undefined,
+      height: undefined,
+      showlegend: false,
+      uirevision: 'constant',
+      plot_bgcolor: 'rgba(0,0,0,0)',
+      paper_bgcolor: 'rgba(0,0,0,0)',
+      font: { family: 'Arial, sans-serif', size: responsiveSettings.fontSize }
+    };
+    
+    debug(debugCategories.PLOTLY_CONFIG, {
+      message: 'Axis visibility settings',
+      leftAxisVisible: hasLeftAxisData,
+      rightAxisVisible: hasRightAxisData,
       showGrid: settings.showGrid
     });
     
@@ -288,127 +393,10 @@ export const usePlotlyConfig = ({
       hovermode: settings.showTooltip ? ('closest' as const) : (false as const),
       dragmode: 'pan' as const,
       scrollZoom: true,
-      margin: responsiveSettings.margin,
-      autosize: true,
-      width: undefined,
-      height: undefined,
-      showlegend: false,
-      uirevision: 'constant',
-      plot_bgcolor: 'rgba(0,0,0,0)',
-      paper_bgcolor: 'rgba(0,0,0,0)',
-      font: { family: 'Arial, sans-serif', size: responsiveSettings.fontSize }
-    };
-    
-    // 🔍 DEBUG: Log axis visibility settings
-    console.log('🔍 AXIS VISIBILITY DEBUG:', {
-      leftAxis: {
-        visible: true,
-        showticklabels: hasLeftAxisData,
-        ticks: hasLeftAxisData ? 'outside' : '',
-        showgrid: settings.showGrid,
-        autorange: hasLeftAxisData,
-        range: leftAxisRange
+      margin: {
+        ...responsiveSettings.margin,
+        b: Math.max(10, responsiveSettings.margin.b - 20) // Reduce bottom margin by 20px, minimum 10px
       },
-      rightAxis: {
-        visible: true,
-        showticklabels: hasRightAxisData,
-        ticks: hasRightAxisData ? 'outside' : '',
-        showgrid: false,
-        autorange: hasRightAxisData ? true : false
-      }
-    });
-    
-    return {
-      title: {
-        text: '',
-        font: { size: responsiveSettings.titleSize }
-      },
-      xaxis: {
-        title: { 
-          text: settings.axisLabels.xAxis || '',
-          font: { size: responsiveSettings.fontSize }
-        },
-        showgrid: settings.showGrid,
-        gridcolor: '#f0f0f0',
-        tickformat: responsiveSettings.dateFormat,
-        tickangle: 0,
-        tickfont: { size: responsiveSettings.fontSize },
-        tickmode: 'auto',
-        nticks: 6,
-        showline: true,
-        linewidth: 1,
-        linecolor: '#d1d5db',
-        mirror: true
-      },
-      yaxis: {
-        title: { 
-          text: hasLeftAxisData ? (settings.axisLabels.yAxis || '') : '',
-          font: { size: responsiveSettings.fontSize }
-        },
-        showgrid: settings.showGrid,
-        gridcolor: '#f0f0f0',
-        tickformat: ',.0f',
-        tickformatstops: [
-          { dtickrange: [null, 100], value: ',.1f' },
-          { dtickrange: [100, null], value: ',.0f' }
-        ],
-        side: 'left',
-        nticks: responsiveSettings.nticks,
-        tickfont: { 
-          size: responsiveSettings.fontSize,
-          color: hasLeftAxisData ? '#000000' : 'rgba(0,0,0,0)'
-        },
-        showline: true,
-        linewidth: 1,
-        linecolor: '#d1d5db',
-        mirror: true,
-        automargin: true,
-        showticklabels: hasLeftAxisData,
-        ticks: hasLeftAxisData ? 'outside' : '',
-        fixedrange: false,
-        zeroline: false,
-        visible: true,
-        type: 'linear',
-        autorange: hasLeftAxisData,
-        range: leftAxisRange,
-        domain: [0, 1],
-        rangemode: 'tozero'
-      },
-      yaxis2: {
-        title: { 
-          text: hasRightAxisData ? (settings.axisLabels.yAxis || '') : '',
-          font: { size: responsiveSettings.fontSize }
-        },
-        showgrid: false,
-        gridcolor: '#f0f0f0',
-        tickformat: ',.0f',
-        tickformatstops: [
-          { dtickrange: [null, 100], value: ',.1f' },
-          { dtickrange: [100, null], value: ',.0f' }
-        ],
-        side: 'right',
-        overlaying: 'y',
-        nticks: responsiveSettings.nticks,
-        tickfont: { size: responsiveSettings.fontSize },
-        showline: true,
-        linewidth: 1,
-        linecolor: '#d1d5db',
-        mirror: false,
-        automargin: true,
-        showticklabels: hasRightAxisData,
-        ticks: hasRightAxisData ? 'outside' : '',
-        fixedrange: false,
-        visible: true,
-        type: 'linear',
-        autorange: hasRightAxisData ? true : false,
-        range: hasRightAxisData ? undefined : [0, 1],
-        domain: [0, 1],
-        rangemode: hasRightAxisData ? 'tozero' : 'normal'
-      },
-      hovermode: settings.showTooltip ? ('closest' as const) : (false as const),
-      dragmode: 'pan' as const,
-      scrollZoom: true,
-      margin: responsiveSettings.margin,
       autosize: true,
       width: undefined,
       height: undefined,

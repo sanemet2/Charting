@@ -3,8 +3,10 @@ import Plot from 'react-plotly.js';
 import './ChartStyles.css';
 import ChartSettingsModal, { ChartSettings } from '../components/ChartSettingsModal';
 import { DataSeries } from '../../core/models/DataTypes';
-import { useChartData, useAxisAssignment, useResponsiveSettings, usePlotlyConfig, useSeriesManagement, useInlineEditing } from './LineChart/hooks';
+import { useChartData, useAxisAssignment, useResponsiveSettings, usePlotlyConfig, useInlineEditing, useLegend } from './LineChart/hooks';
+import { ChartLegend } from './LineChart/components';
 import { DataPoint, Series, LineChartProps } from './LineChart/types';
+import { debug, debugCategories } from './LineChart/utils/debug';
 
 const defaultSettings: ChartSettings = {
   showGrid: true,
@@ -31,6 +33,9 @@ const LineChart: React.FC<LineChartProps> = ({
 }) => {
   const [showSettings, setShowSettings] = useState(false);
   const [settings, setSettings] = useState<ChartSettings>(defaultSettings);
+  
+  // Container ref for responsive behavior
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // 🎯 REFACTORED: Title editing logic extracted to useInlineEditing hook
   const { chartTitle, setChartTitle, isEditingTitle, setIsEditingTitle, titleInputRef, handleTitleSubmit } = useInlineEditing({
@@ -38,7 +43,10 @@ const LineChart: React.FC<LineChartProps> = ({
   });
 
   // 🎯 REFACTORED: Responsive settings logic extracted to useResponsiveSettings hook
-  const { responsiveSettings } = useResponsiveSettings({ gridSize });
+  const { responsiveSettings, containerDimensions, isNarrow, isVerySmall, isDimensionsStable } = useResponsiveSettings({ 
+    gridSize, 
+    containerRef 
+  });
 
   // 🎯 REFACTORED: Data processing extracted to useChartData hook
   const { processedData, processedSeries } = useChartData({
@@ -51,35 +59,55 @@ const LineChart: React.FC<LineChartProps> = ({
   // 🎯 REFACTORED: Axis assignment logic extracted to useAxisAssignment hook
   const { seriesAxisAssignment, setSeriesAxisAssignment } = useAxisAssignment({
     processedSeries,
-    processedData
+    processedData,
+    gridSize
   });
 
-  // 🎯 REFACTORED: Series management logic extracted to useSeriesManagement hook
-  const { 
-    seriesNames, 
-    setSeriesNames, 
-    editingSeries, 
-    setEditingSeries, 
-    carouselOffset, 
-    setCarouselOffset, 
-    seriesInputRef, 
-    handleSeriesSubmit, 
-    getLegendCarousel, 
-    handleCarouselNext, 
-    getMaxLegendItems 
-  } = useSeriesManagement({
+  // 🎯 REFACTORED: Legend logic extracted to useLegend hook
+  const legendData = useLegend({
     processedSeries,
-    gridSize
+    gridSize,
+    seriesAxisAssignment,
+    setSeriesAxisAssignment,
+    settings,
+    containerDimensions,
+    isNarrow,
+    isVerySmall,
+    isDimensionsStable
   });
 
   // 🎯 REFACTORED: Plotly configuration logic extracted to usePlotlyConfig hook
   const { plotlyData, plotlyLayout, plotlyConfig, hasLeftAxisData, hasRightAxisData } = usePlotlyConfig({
     processedData,
     processedSeries,
-    seriesNames,
+    seriesNames: legendData.seriesNames,
     settings,
     seriesAxisAssignment,
     responsiveSettings
+  });
+
+  // 🔧 FIX: Stable Plot revision - moved to top level to follow Rules of Hooks
+  const plotRevision = useMemo(() => {
+    // Only update revision when layout actually changes
+    const stableKey = `${gridSize}-${responsiveSettings.fontSize}-${containerDimensions.width}x${containerDimensions.height}`;
+    // Simple hash function to convert string to number
+    let hash = 0;
+    for (let i = 0; i < stableKey.length; i++) {
+      hash = ((hash << 5) - hash) + stableKey.charCodeAt(i);
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return Math.abs(hash);
+  }, [gridSize, responsiveSettings.fontSize, containerDimensions.width, containerDimensions.height]);
+
+  const actualLegendHeight = isDimensionsStable && legendData.shouldShowLegend ? legendData.legendHeight : 0;
+  
+  debug(debugCategories.CHART_DATA, {
+    message: 'CSS application debug',
+    gridSize,
+    containerDimensions,
+    isDimensionsStable,
+    shouldShowLegend: legendData.shouldShowLegend,
+    actualLegendHeight
   });
 
   const handleSettingsSave = (newSettings: ChartSettings) => {
@@ -98,7 +126,10 @@ const LineChart: React.FC<LineChartProps> = ({
 
   return (
     <>
-      <div className={`chart-container grid-${gridSize} ${isDropTarget ? 'drop-target' : ''}`}>
+      <div 
+        ref={containerRef}
+        className={`chart-container grid-${gridSize} ${isDropTarget ? 'drop-target' : ''}`}
+      >
         <div className="chart-header">
           {isEditingTitle ? (
             <form onSubmit={handleTitleSubmit} style={{ flex: 1 }}>
@@ -133,12 +164,30 @@ const LineChart: React.FC<LineChartProps> = ({
         </div>
 
         
-        <div className={`chart-body ${processedData.length === 0 || processedSeries.length === 0 ? 'empty-state' : ''}`}>
+        <div className={`chart-body ${processedData.length === 0 || processedSeries.length === 0 ? 'empty-state' : ''}`} style={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          width: '100%',
+          // 🔧 FIX: Only set CSS custom property when dimensions are stable
+          '--legend-height': `${actualLegendHeight}px`,
+          minHeight: 0
+        } as React.CSSProperties}>
           {processedData.length === 0 || processedSeries.length === 0 ? (
             renderEmptyState()
           ) : (
             <>
-              <div className="plotly-chart-container" style={{ width: '100%', height: 'calc(100% - 40px)', minHeight: '250px' }}>
+              <div className="plotly-chart-container" style={{ 
+                width: '100%', 
+                // 🔧 FIX: Wait for stable dimensions before applying legend space
+                height: isDimensionsStable && legendData.shouldShowLegend ? 
+                  'calc(100% - var(--legend-height))' : 
+                  '100%', // Use full height until dimensions stabilize
+                minHeight: containerDimensions.height > 0 && containerDimensions.height < 200 ? '120px' : '150px',
+                overflow: 'hidden',
+                // 🔧 DEBUG: Add visual indicator for timing issues
+                transition: 'height 0.1s ease-out' // Smooth transition when height changes
+              }}>
                 <Plot
                   key={`plot-${id}-${JSON.stringify(seriesAxisAssignment)}`}
                   data={plotlyData}
@@ -146,142 +195,37 @@ const LineChart: React.FC<LineChartProps> = ({
                   config={plotlyConfig}
                   style={{ width: '100%', height: '100%' }}
                   useResizeHandler={true}
-                  revision={Date.now()}
+                  revision={plotRevision}
                 />
               </div>
-              {/* Inline Legend - Carousel System */}
-              {settings.showLegend && processedSeries.length > 0 && (() => {
-                const { hasOverflow, visibleItems, canScrollNext } = getLegendCarousel();
-                console.log('Legend rendering:', { 
-                  showLegend: settings.showLegend, 
-                  seriesCount: processedSeries.length, 
-                  hasOverflow, 
-                  visibleItemsCount: visibleItems.length,
-                  carouselOffset 
-                });
+              {/* New Legend Component - Below Chart */}
+              {legendData.shouldShowLegend && isDimensionsStable && (() => {
+                const { visibleItems, canScrollNext } = legendData.getLegendCarousel();
                 return (
-                  <div className="chart-inline-legend" style={{ position: 'absolute', bottom: '10px', width: '100%', zIndex: 10 }}>
-                    <div 
-                      className="legend-wrapper"
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '0px', // Reduced gap to bring button closer to legend
-                        background: 'transparent',
-                        padding: '8px 16px', // Added padding for breathing room
-                        borderRadius: '0',
-                        border: 'none',
-                        minWidth: '360px' // Ensure adequate space for content
-                      }}
-                    >
-                      {/* Container 1: Carousel viewport - shows only 2 items */}
-                      <div 
-                        className="legend-carousel-container"
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '20px', // Generous spacing between legend items
-                          overflow: 'hidden', // Hide overflow to maintain fixed width
-                          justifyContent: 'flex-start',
-                          transition: 'all 0.3s ease-in-out',
-                          flexShrink: 0, // Prevent shrinking of legend items
-                          width: '240px' // Fixed width to prevent button shifting
-                        }}
-                      >
-                        {/* Only render the visible items */}
-                        {visibleItems.map((s, index) => {
-                          const originalIndex = processedSeries.findIndex(series => series.dataKey === s.dataKey);
-                          return (
-                            <div key={`${s.dataKey}-${index}`} className="legend-item">
-                              <div 
-                                className="legend-color" 
-                                style={{ 
-                                  backgroundColor: s.color || (index === 0 ? settings.colors.primary : settings.colors.secondary)
-                                }}
-                              ></div>
-                              {editingSeries === s.dataKey ? (
-                                <form onSubmit={(e) => handleSeriesSubmit(e, s.dataKey)} style={{ display: 'inline' }}>
-                                  <input
-                                    ref={seriesInputRef}
-                                    type="text"
-                                    value={seriesNames[s.dataKey] || s.name}
-                                    onChange={(e) => setSeriesNames(prev => ({ ...prev, [s.dataKey]: e.target.value }))}
-                                    onBlur={() => setEditingSeries(null)}
-                                    className="inline-edit-input series-edit"
-                                  />
-                                </form>
-                              ) : (
-                                <span 
-                                  className="legend-label editable"
-                                  onClick={() => setEditingSeries(s.dataKey)}
-                                  title={`${seriesNames[s.dataKey] || s.name} - Click to edit`}
-                                >
-                                  {seriesNames[s.dataKey] || s.name}
-                                </span>
-                              )}
-                              <button
-                                className="axis-toggle-btn"
-                                onClick={() => {
-                                  const newAxis = seriesAxisAssignment[s.dataKey] === 'y2' ? 'y' : 'y2';
-                                  console.log(`🔍 MANUAL OVERRIDE: Moving ${s.name} to ${newAxis} axis`);
-                                  setSeriesAxisAssignment(prev => ({
-                                    ...prev,
-                                    [s.dataKey]: newAxis
-                                  }));
-                                }}
-                                title={`Switch to ${seriesAxisAssignment[s.dataKey] === 'y2' ? 'left' : 'right'} axis`}
-                              >
-                                {seriesAxisAssignment[s.dataKey] === 'y2' ? 'R' : 'L'}
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                      
-                      {/* Container 2: Carousel "+" button */}
-                      {canScrollNext && (
-                        <button 
-                          className="legend-carousel-next"
-                          onClick={handleCarouselNext}
-                          title="Click to see more series"
-                          style={{
-                            background: 'rgba(99, 102, 241, 0.1)',
-                            color: '#6366f1',
-                            fontSize: '10px',
-                            fontWeight: 'bold',
-                            lineHeight: '1',
-                            letterSpacing: '1px',
-                            textIndent: '1px', // Shift just the text content left
-
-                            width: '18px',
-                            height: '18px',
-                            border: '1px solid rgba(99, 102, 241, 0.3)',
-                            borderRadius: '50%',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            textAlign: 'center',
-                            flexShrink: 0,
-                            transition: 'all 0.2s ease',
-                            boxShadow: 'none',
-                            marginLeft: '6px' // Closer to the legend items
-                          }}
-                                                      onMouseEnter={(e) => {
-                              e.currentTarget.style.background = 'rgba(99, 102, 241, 0.2)';
-                              // Removed scale transform to prevent centering shift
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.background = 'rgba(99, 102, 241, 0.1)';
-                              // Removed scale transform to prevent centering shift
-                            }}
-                                                  >
-                            <span style={{ transform: 'translateY(1px)', display: 'inline-block' }}>•••</span>
-                          </button>
-                      )}
-                    </div>
-                  </div>
+                  <ChartLegend
+                    processedSeries={processedSeries}
+                    seriesNames={legendData.seriesNames}
+                    seriesAxisAssignment={seriesAxisAssignment}
+                    editingSeries={legendData.editingSeries}
+                    setSeriesNames={legendData.setSeriesNames}
+                    setEditingSeries={legendData.setEditingSeries}
+                    setSeriesAxisAssignment={setSeriesAxisAssignment}
+                    handleSeriesSubmit={legendData.handleSeriesSubmit}
+                    handleCarouselNext={legendData.handleCarouselNext}
+                    seriesInputRef={legendData.seriesInputRef}
+                    visibleItems={visibleItems}
+                    canScrollNext={canScrollNext}
+                    legendStyle={{
+                      ...legendData.legendStyle,
+                      // 🔧 FIX: Add transition for smooth appearance after font changes
+                      opacity: isDimensionsStable ? 1 : 0,
+                      transition: 'opacity 0.2s ease-in'
+                    }}
+                    settings={settings}
+                    isNarrow={isNarrow}
+                    isVerySmall={isVerySmall}
+                    containerDimensions={containerDimensions}
+                  />
                 );
               })()}
             </>

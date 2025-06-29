@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { DataSeries } from '../../../../core/models/DataTypes';
 import { DataPoint, Series } from '../types';
+import { debug, debugCategories } from '../utils/debug';
 
 interface UseChartDataProps {
   data: DataPoint[];
@@ -39,7 +40,8 @@ export const useChartData = ({
     
     const currentResponsiveSettings = getResponsiveSettings(gridSize);
     
-    console.log('🔍 FREQUENCY-AWARE DEBUG: Starting data processing', {
+    debug(debugCategories.CHART_DATA, {
+      message: 'Starting data processing',
       seriesCount: dataSeries.length,
       seriesFrequencies: dataSeries.map(s => ({ id: s.id, name: s.name, frequency: s.frequency, pointCount: s.dataPoints.length }))
     });
@@ -58,12 +60,11 @@ export const useChartData = ({
       const sampledSeriesDates = seriesDates.filter((_: any, index: number) => index % currentResponsiveSettings.sampleRate === 0);
       sampledSeriesDates.forEach((date: string) => allDates.add(date));
       
-      console.log(`🔍 DAILY SERIES PROCESSING: ${series.name}`, {
+      debug(debugCategories.CHART_DATA, {
+        message: `Daily series processing: ${series.name}`,
         totalPoints: seriesDates.length,
         sampledPoints: sampledSeriesDates.length,
-        sampleRate: currentResponsiveSettings.sampleRate,
-        firstFewSampled: sampledSeriesDates.slice(0, 5),
-        lastFewSampled: sampledSeriesDates.slice(-5)
+        sampleRate: currentResponsiveSettings.sampleRate
       });
     });
     
@@ -71,26 +72,20 @@ export const useChartData = ({
     monthlyAndOtherSeries.forEach(series => {
       series.dataPoints.forEach((point: any) => allDates.add(point.date));
       
-      console.log(`🔍 NON-DAILY SERIES PROCESSING: ${series.name}`, {
+      debug(debugCategories.CHART_DATA, {
+        message: `Non-daily series processing: ${series.name}`,
         frequency: series.frequency,
         totalPoints: series.dataPoints.length,
-        allPointsKept: true,
-        dateRange: series.dataPoints.length > 0 ? {
-          first: series.dataPoints[0].date,
-          last: series.dataPoints[series.dataPoints.length - 1].date
-        } : 'NO DATA'
+        allPointsKept: true
       });
     });
     
     // Sort all collected dates
     const sortedDates = Array.from(allDates).sort();
     
-    console.log('🔍 FREQUENCY-AWARE DEBUG: Final date processing', {
+    debug(debugCategories.CHART_DATA, {
+      message: 'Final date processing',
       totalUniqueDates: sortedDates.length,
-      dateRange: sortedDates.length > 0 ? {
-        first: sortedDates[0],
-        last: sortedDates[sortedDates.length - 1]
-      } : 'NO DATES',
       dailySeriesCount: dailySeries.length,
       nonDailySeriesCount: monthlyAndOtherSeries.length
     });
@@ -110,13 +105,13 @@ export const useChartData = ({
     // Debug: Check data availability for each series
     dataSeries.forEach(series => {
       const availableData = processedData.filter(p => p[series.id] != null);
-      console.log(`🔍 SERIES DATA AVAILABILITY: ${series.name}`, {
+      debug(debugCategories.CHART_DATA, {
+        message: `Series data availability: ${series.name}`,
         frequency: series.frequency,
         originalDataPoints: series.dataPoints.length,
         availableInProcessed: availableData.length,
         dataLossPercentage: series.dataPoints.length > 0 ? 
-          ((series.dataPoints.length - availableData.length) / series.dataPoints.length * 100).toFixed(1) + '%' : '0%',
-        sampleValues: availableData.slice(0, 5).map(p => ({ date: p.date, value: p[series.id] }))
+          ((series.dataPoints.length - availableData.length) / series.dataPoints.length * 100).toFixed(1) + '%' : '0%'
       });
     });
     
