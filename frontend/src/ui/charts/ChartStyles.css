@@ -123,10 +123,12 @@
   position: relative;
   flex: 1;
   padding: 4px 8px 8px 8px;
-  min-height: 150px; /* Reduced from 300px to work better with grid constraints */
+  min-height: 250px; /* Base minimum height for good chart visibility */
   display: flex;
   background: #fafbfc;
   overflow: hidden;
+  max-width: 100%; /* Prevent overflow */
+  box-sizing: border-box;
 }
 
 /* Centering for empty states only */
@@ -153,15 +155,26 @@
 /* Adjust sizes for different grids - Remove min-heights */
 .grid-1x1 .chart-body {
   padding: 12px 16px 16px 16px;
+  min-height: 400px; /* Generous height for single large chart */
 }
 
-.grid-3x3 .chart-body,
+.grid-2x2 .chart-body {
+  min-height: 300px; /* Good height for 2x2 grid */
+}
+
+.grid-3x3 .chart-body {
+  padding: 6px;
+  min-height: 220px; /* Balanced height for 3x3 grid */
+}
+
 .grid-4x4 .chart-body {
   padding: 6px;
+  min-height: 180px; /* Compact but usable for 4x4 grid */
 }
 
 .grid-5x5 .chart-body {
   padding: 4px;
+  min-height: 150px; /* Minimal but functional for 5x5 grid */
 }
 
 .grid-5x5 .chart-body.empty-state {
@@ -775,14 +788,14 @@
   padding: 1px 4px;
 }
 
-/* Plotly Chart Container - Strict Containment */
+/* Plotly Chart Container - Proper Responsive Sizing */
 .plotly-chart-container {
   position: relative;
   width: 100%;
   height: 100%;
   overflow: hidden; /* Prevent chart from bleeding outside */
   border-radius: 0 0 12px 12px; /* Match parent container rounding */
-  min-height: 0; /* Allow charts to be as small as needed */
+  min-height: 200px; /* Reasonable minimum for chart visibility */
   max-width: 100%; /* Strict width constraint */
 }
 
@@ -805,15 +818,36 @@
   box-sizing: border-box !important;
 }
 
-/* Force chart body to respect fixed heights */
+/* Responsive chart body heights for different grid sizes */
 .chart-body {
   position: relative;
   flex: 1;
   padding: 4px 8px 8px 8px;
-  min-height: 0 !important; /* Remove min-height constraints */
+  min-height: 250px; /* Base minimum height for good chart visibility */
   display: flex;
   background: #fafbfc;
   overflow: hidden;
   max-width: 100%; /* Prevent overflow */
   box-sizing: border-box;
+}
+
+/* Grid-specific responsive heights */
+.grid-1x1 .chart-body {
+  min-height: 400px; /* Generous height for single large chart */
+}
+
+.grid-2x2 .chart-body {
+  min-height: 300px; /* Good height for 2x2 grid */
+}
+
+.grid-3x3 .chart-body {
+  min-height: 220px; /* Balanced height for 3x3 grid */
+}
+
+.grid-4x4 .chart-body {
+  min-height: 180px; /* Compact but usable for 4x4 grid */
+}
+
+.grid-5x5 .chart-body {
+  min-height: 150px; /* Minimal but functional for 5x5 grid */
 }

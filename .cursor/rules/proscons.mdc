@@ -1,0 +1,14 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+When asking an architectural question you must respond with a pros and cons list.
+
+
+Always use the console log using the browser tools MCP if needed BUT the screenshot tool doesnt work. 
+
+We are only working on the frontend chart component right now. That doesnt mean you should ignore the other parts of the program, but keep this component isolated and atleast be aware of not doing anything that will interfere with the operation of the program as a whole. Ideally we want to build this part of the program AWARE of how it will fit with the rest later on. 
+
+This is the command to start browser tools.
+npx @agentdeskai/browser-tools-server@latest
