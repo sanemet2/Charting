@@ -50,6 +50,7 @@ const LineChart: React.FC<LineChartProps> = ({
   });
 
   const [showSettings, setShowSettings] = React.useState(false);
+  const [showManipulation, setShowManipulation] = React.useState(false);
   const [editingTitle, setEditingTitle] = React.useState('');
   
   // --- 3. Effects (MUST BE CALLED UNCONDITIONALLY) ---
@@ -117,6 +118,11 @@ const LineChart: React.FC<LineChartProps> = ({
 
   const handleSettingsSave = (newSettings: any) => {
     actions.setSettings(newSettings);
+  };
+
+  const handleManipulationClick = () => {
+    console.log("Data manipulation clicked!");
+    setShowManipulation(true);
   };
 
   const setSeriesNames = React.useCallback((updater: React.SetStateAction<{ [key: string]: string }>) => {
@@ -203,6 +209,13 @@ const LineChart: React.FC<LineChartProps> = ({
           <div className="chart-actions">
             <button
               className="chart-action"
+              title="Data manipulation tools"
+              onClick={handleManipulationClick}
+            >
+              🧮
+            </button>
+            <button
+              className="chart-action"
               title="Chart settings"
               onClick={() => setShowSettings(true)}
             >
@@ -275,6 +288,38 @@ const LineChart: React.FC<LineChartProps> = ({
         processedSeries={state.processedSeries}
         seriesNames={state.seriesNames}
       />
+      {showManipulation && (
+        <div style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          background: 'white',
+          border: '1px solid #ccc',
+          borderRadius: '8px',
+          padding: '20px',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          zIndex: 1000
+        }}>
+          <h3>Data Manipulation (Placeholder)</h3>
+          <p>Calculator button is working! 🎉</p>
+          <button onClick={() => setShowManipulation(false)}>Close</button>
+        </div>
+      )}
+      {showManipulation && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 999
+          }}
+          onClick={() => setShowManipulation(false)}
+        />
+      )}
     </>
   );
 };
