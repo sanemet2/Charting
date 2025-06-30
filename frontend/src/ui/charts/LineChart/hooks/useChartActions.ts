@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { DataSeries } from '../../../../core/models/DataTypes';
 import { DataPoint, Series } from '../types';
+import { ChartSettings } from '../../../components/ChartSettingsModal';
 
 // Action creators hook - provides clean API for updating chart state
 export const useChartActions = (dispatch: React.Dispatch<any>) => {
@@ -65,6 +66,10 @@ export const useChartActions = (dispatch: React.Dispatch<any>) => {
     dispatch({ type: 'SET_EDITING_TITLE', payload: editing });
   }, [dispatch]);
 
+  const setSettings = useCallback((settings: ChartSettings) => {
+    dispatch({ type: 'SET_SETTINGS', payload: settings });
+  }, [dispatch]);
+
   return useMemo(() => ({
     // Data actions
     setRawData,
@@ -87,7 +92,10 @@ export const useChartActions = (dispatch: React.Dispatch<any>) => {
     
     // Title actions
     setChartTitle,
-    setEditingTitle
+    setEditingTitle,
+    
+    // Settings actions
+    setSettings
   }), [
     dispatch, 
     setRawData, 
@@ -102,6 +110,7 @@ export const useChartActions = (dispatch: React.Dispatch<any>) => {
     setLegendHeight,
     nextCarouselPage, 
     setChartTitle, 
-    setEditingTitle
+    setEditingTitle,
+    setSettings
   ]);
 }; 

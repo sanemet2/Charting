@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useMemo } from 'react';
 import Plot from 'react-plotly.js';
 import './ChartStyles.css';
-import ChartSettingsModal, { ChartSettings } from '../components/ChartSettingsModal';
+import ChartSettingsModal from '../components/ChartSettingsModal';
 import { useChartState, useChartActions, useSimpleResponsive, useLegendCarousel, usePlotlyConfig } from './LineChart/hooks';
 import { ChartLegend } from './LineChart/components';
 import { LineChartProps, DataPoint, Series } from './LineChart/types';
@@ -12,20 +12,6 @@ import { DataSeries } from '../../core/models/DataTypes';
 const EMPTY_DATA: DataPoint[] = [];
 const EMPTY_SERIES: Series[] = [];
 const EMPTY_DATA_SERIES: DataSeries[] = [];
-
-const defaultSettings: ChartSettings = {
-  showGrid: true,
-  showLegend: true,
-  showTooltip: true,
-  axisLabels: {
-    xAxis: '',
-    yAxis: ''
-  },
-  colors: {
-    primary: '#6366f1',
-    secondary: '#f43f5e'
-  }
-};
 
 const LineChart: React.FC<LineChartProps> = ({
   id,
@@ -58,13 +44,12 @@ const LineChart: React.FC<LineChartProps> = ({
     processedData: state.processedData,
     processedSeries: state.processedSeries,
     seriesNames: state.seriesNames,
-    settings: defaultSettings,
+    settings: state.settings,
     seriesAxisAssignment: state.seriesAxisAssignment,
     responsiveSettings: responsive.responsiveSettings
   });
 
   const [showSettings, setShowSettings] = React.useState(false);
-  const [settings, setSettings] = React.useState<ChartSettings>(defaultSettings);
   const [editingTitle, setEditingTitle] = React.useState('');
   
   // --- 3. Effects (MUST BE CALLED UNCONDITIONALLY) ---
@@ -130,8 +115,8 @@ const LineChart: React.FC<LineChartProps> = ({
     actions.setCarouselOffset(nextOffset);
   };
 
-  const handleSettingsSave = (newSettings: ChartSettings) => {
-    setSettings(newSettings);
+  const handleSettingsSave = (newSettings: any) => {
+    actions.setSettings(newSettings);
   };
 
   const setSeriesNames = React.useCallback((updater: React.SetStateAction<{ [key: string]: string }>) => {
@@ -273,7 +258,7 @@ const LineChart: React.FC<LineChartProps> = ({
                 fontSize: responsive.responsiveSettings.fontSize,
                 justifyContent: carousel.canScrollNext ? 'space-between' : 'center'
               }}
-              settings={settings}
+              settings={state.settings}
               isNarrow={responsive.isNarrow}
               isVerySmall={responsive.isVerySmall}
               containerDimensions={responsive.containerDimensions}
@@ -284,9 +269,11 @@ const LineChart: React.FC<LineChartProps> = ({
       <ChartSettingsModal
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
-        settings={settings}
+        settings={state.settings}
         onSave={handleSettingsSave}
         chartType="line"
+        processedSeries={state.processedSeries}
+        seriesNames={state.seriesNames}
       />
     </>
   );

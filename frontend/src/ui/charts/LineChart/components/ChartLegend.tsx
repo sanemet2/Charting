@@ -28,10 +28,7 @@ interface ChartLegendProps {
   // Styling
   legendStyle: React.CSSProperties;
   settings: {
-    colors: {
-      primary: string;
-      secondary: string;
-    };
+    colors: { [seriesId: string]: string };
   };
 
   // Container awareness
@@ -115,7 +112,7 @@ export const ChartLegend: React.FC<ChartLegendProps> = ({
               style={{
                 width: adaptive.colorSize,
                 height: adaptive.colorSize,
-                backgroundColor: s.color || settings.colors.primary,
+                backgroundColor: settings.colors[s.dataKey] || s.color || '#6366f1',
                 borderRadius: '2px',
                 flexShrink: 0,
               }}

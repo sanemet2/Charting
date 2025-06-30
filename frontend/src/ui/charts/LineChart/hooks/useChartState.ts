@@ -1,6 +1,7 @@
 import { useReducer, useEffect } from 'react';
 import { DataSeries } from '../../../../core/models/DataTypes';
 import { DataPoint, Series } from '../types';
+import { ChartSettings } from '../../../components/ChartSettingsModal';
 
 // Central state interface
 interface ChartState {
@@ -29,6 +30,9 @@ interface ChartState {
   // Title State
   chartTitle: string;
   isEditingTitle: boolean;
+  
+  // Settings State
+  settings: ChartSettings;
 }
 
 // Action types
@@ -44,6 +48,7 @@ type ChartAction =
   | { type: 'SET_LEGEND_HEIGHT'; payload: number }
   | { type: 'SET_CHART_TITLE'; payload: string }
   | { type: 'SET_EDITING_TITLE'; payload: boolean }
+  | { type: 'SET_SETTINGS'; payload: ChartSettings }
   | { type: 'PROCESS_DATA' }
   | { type: 'CALCULATE_LEGEND' };
 
@@ -64,7 +69,12 @@ const initialState: ChartState = {
   legendHeight: 30,
   shouldShowLegend: true,
   chartTitle: 'Line Chart',
-  isEditingTitle: false
+  isEditingTitle: false,
+  settings: {
+    showGrid: true,
+    showTooltip: true,
+    colors: {}
+  }
 };
 
 // Pure data processing functions (extracted from hooks)
@@ -234,6 +244,12 @@ const chartReducer = (state: ChartState, action: ChartAction): ChartState => {
         isEditingTitle: action.payload
       };
       
+    case 'SET_SETTINGS':
+      return {
+        ...state,
+        settings: action.payload
+      };
+      
     case 'PROCESS_DATA': {
       const { processedData, processedSeries } = processChartData(state);
       
@@ -253,12 +269,25 @@ const chartReducer = (state: ChartState, action: ChartAction): ChartState => {
         }
       });
       
+      // Initialize series colors using the actual colors assigned to the series
+      const newColors = { ...state.settings.colors };
+      processedSeries.forEach((series) => {
+        if (!newColors[series.dataKey]) {
+          // Use the color that was actually assigned to the series in processChartData
+          newColors[series.dataKey] = series.color || '#6366f1';
+        }
+      });
+      
       return {
         ...state,
         processedData,
         processedSeries,
         seriesAxisAssignment: newAxisAssignments,
-        seriesNames: newSeriesNames
+        seriesNames: newSeriesNames,
+        settings: {
+          ...state.settings,
+          colors: newColors
+        }
       };
     }
     

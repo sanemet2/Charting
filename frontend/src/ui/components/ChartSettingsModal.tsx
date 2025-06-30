@@ -1,30 +1,17 @@
-// Import React library with useState hook for state management
-import React, { useState } from 'react';
+// Import React library with useState and useEffect hooks for state management
+import React, { useState, useEffect } from 'react';
 // Import ChartSettingsModal-specific styles for component styling
 import './ChartSettingsModal.css';
+import { Series } from '../charts/LineChart/types';
 
 // Define ChartSettings interface for chart configuration data
 export interface ChartSettings {
   // Define showGrid property for grid line visibility
   showGrid: boolean;
-  // Define showLegend property for legend visibility
-  showLegend: boolean;
   // Define showTooltip property for tooltip visibility
   showTooltip: boolean;
-  // Define axisLabels property for axis label configuration
-  axisLabels: {
-    // Define xAxis property for X-axis label text
-    xAxis: string;
-    // Define yAxis property for Y-axis label text
-    yAxis: string;
-  };
-  // Define colors property for chart color scheme
-  colors: {
-    // Define primary property for primary color value
-    primary: string;
-    // Define secondary property for secondary color value
-    secondary: string;
-  };
+  // Define colors property for dynamic series colors
+  colors: { [seriesId: string]: string };
 }
 
 // Define ChartSettingsModalProps interface for component properties
@@ -39,6 +26,10 @@ interface ChartSettingsModalProps {
   onSave: (settings: ChartSettings) => void;
   // Define chartType property with specific chart type options
   chartType: 'line' | 'bar';
+  // Define processedSeries property for dynamic color pickers
+  processedSeries: Series[];
+  // Define seriesNames property for series display names
+  seriesNames: { [key: string]: string };
 }
 
 const ChartSettingsModal: React.FC<ChartSettingsModalProps> = ({ 
@@ -46,9 +37,16 @@ const ChartSettingsModal: React.FC<ChartSettingsModalProps> = ({
   onClose, 
   settings, 
   onSave,
-  chartType 
+  chartType,
+  processedSeries,
+  seriesNames
 }) => {
   const [localSettings, setLocalSettings] = useState<ChartSettings>(settings);
+
+  // Sync local settings with props when settings change
+  useEffect(() => {
+    setLocalSettings(settings);
+  }, [settings]);
 
   if (!isOpen) return null;
 
@@ -57,22 +55,12 @@ const ChartSettingsModal: React.FC<ChartSettingsModalProps> = ({
     onClose();
   };
 
-  const handleColorChange = (colorKey: 'primary' | 'secondary', value: string) => {
+  const handleSeriesColorChange = (seriesId: string, color: string) => {
     setLocalSettings({
       ...localSettings,
       colors: {
         ...localSettings.colors,
-        [colorKey]: value
-      }
-    });
-  };
-
-  const handleAxisLabelChange = (axis: 'xAxis' | 'yAxis', value: string) => {
-    setLocalSettings({
-      ...localSettings,
-      axisLabels: {
-        ...localSettings.axisLabels,
-        [axis]: value
+        [seriesId]: color
       }
     });
   };
@@ -103,15 +91,6 @@ const ChartSettingsModal: React.FC<ChartSettingsModalProps> = ({
             <label className="checkbox-label">
               <input
                 type="checkbox"
-                checked={localSettings.showLegend}
-                onChange={(e) => setLocalSettings({ ...localSettings, showLegend: e.target.checked })}
-              />
-              <span>Show Legend</span>
-            </label>
-
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
                 checked={localSettings.showTooltip}
                 onChange={(e) => setLocalSettings({ ...localSettings, showTooltip: e.target.checked })}
               />
@@ -119,72 +98,29 @@ const ChartSettingsModal: React.FC<ChartSettingsModalProps> = ({
             </label>
           </div>
 
-          {/* Axis Labels */}
+          {/* Series Colors */}
           <div className="settings-section">
-            <h3>Axis Labels</h3>
+            <h3>Series Colors</h3>
             
-            <div className="input-group">
-              <label>X-Axis Label</label>
-              <input
-                type="text"
-                value={localSettings.axisLabels.xAxis}
-                onChange={(e) => handleAxisLabelChange('xAxis', e.target.value)}
-                placeholder="Enter X-axis label"
-                className="settings-input"
-              />
-            </div>
-
-            <div className="input-group">
-              <label>Y-Axis Label</label>
-              <input
-                type="text"
-                value={localSettings.axisLabels.yAxis}
-                onChange={(e) => handleAxisLabelChange('yAxis', e.target.value)}
-                placeholder="Enter Y-axis label"
-                className="settings-input"
-              />
-            </div>
-          </div>
-
-          {/* Colors */}
-          <div className="settings-section">
-            <h3>Colors</h3>
-            
-            <div className="color-group">
-              <label>Primary Color</label>
-              <div className="color-input-wrapper">
-                <input
-                  type="color"
-                  value={localSettings.colors.primary}
-                  onChange={(e) => handleColorChange('primary', e.target.value)}
-                  className="color-picker"
-                />
-                <input
-                  type="text"
-                  value={localSettings.colors.primary}
-                  onChange={(e) => handleColorChange('primary', e.target.value)}
-                  className="color-text"
-                />
+            {processedSeries.map((series, index) => (
+              <div key={series.dataKey} className="color-group">
+                <label>{seriesNames[series.dataKey] || series.name}</label>
+                <div className="color-input-wrapper">
+                  <input
+                    type="color"
+                    value={localSettings.colors[series.dataKey] || '#6366f1'}
+                    onChange={(e) => handleSeriesColorChange(series.dataKey, e.target.value)}
+                    className="color-picker"
+                  />
+                  <input
+                    type="text"
+                    value={localSettings.colors[series.dataKey] || '#6366f1'}
+                    onChange={(e) => handleSeriesColorChange(series.dataKey, e.target.value)}
+                    className="color-text"
+                  />
+                </div>
               </div>
-            </div>
-
-            <div className="color-group">
-              <label>Secondary Color</label>
-              <div className="color-input-wrapper">
-                <input
-                  type="color"
-                  value={localSettings.colors.secondary}
-                  onChange={(e) => handleColorChange('secondary', e.target.value)}
-                  className="color-picker"
-                />
-                <input
-                  type="text"
-                  value={localSettings.colors.secondary}
-                  onChange={(e) => handleColorChange('secondary', e.target.value)}
-                  className="color-text"
-                />
-              </div>
-            </div>
+            ))}
           </div>
         </div>
 

@@ -46,7 +46,7 @@ export const usePlotlyConfig = ({
 
   // Helper function to get the actual trace color for a series
   const getSeriesColor = (s: any, index: number) => {
-    return s.color || (index === 0 ? settings.colors.primary : settings.colors.secondary);
+    return settings.colors[s.dataKey] || s.color || ['#6366f1', '#f43f5e', '#10b981', '#f59e0b', '#8b5cf6'][index % 5];
   };
 
   // Convert data to Plotly format
@@ -264,7 +264,7 @@ export const usePlotlyConfig = ({
       },
       yaxis: {
         title: { 
-          text: hasLeftAxisData ? (settings.axisLabels.yAxis || '') : '',
+          text: hasLeftAxisData ? '' : '',
           font: { size: responsiveSettings.fontSize }
         },
         showgrid: settings.showGrid,
@@ -299,7 +299,7 @@ export const usePlotlyConfig = ({
       },
       yaxis2: {
         title: { 
-          text: hasRightAxisData ? (settings.axisLabels.yAxis || '') : '',
+          text: hasRightAxisData ? '' : '',
           font: { size: responsiveSettings.fontSize }
         },
         showgrid: false,
