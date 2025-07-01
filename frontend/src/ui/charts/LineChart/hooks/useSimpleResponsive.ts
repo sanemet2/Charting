@@ -58,8 +58,8 @@ export const useSimpleResponsive = ({
       '3x3': { 
         fontSize: 11, 
         titleSize: 13,
-        margin: { l: 45, r: 45, t: 30, b: 30 },
-        nticks: 5,
+        margin: { l: 45, r: 45, t: 30, b: 25 },
+        nticks: 4,
         dateFormat: '%b-%Y',
         sampleRate: 5
       },

@@ -13,4 +13,6 @@ export { default as StatusBar } from './StatusBar';
 // Export ChartSettingsModal component as named export for component library
 export { default as ChartSettingsModal } from './ChartSettingsModal';
 // Export ChartSettings type for external use
-export type { ChartSettings } from './ChartSettingsModal'; 
+export type { ChartSettings } from './ChartSettingsModal';
+// Export DataManipulationModal component as named export for component library
+export { default as DataManipulationModal } from './DataManipulationModal'; 

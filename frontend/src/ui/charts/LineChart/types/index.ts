@@ -20,4 +20,7 @@ export interface LineChartProps {
   dataSeries?: import('../../../../core/models/DataTypes').DataSeries[];
   isDropTarget?: boolean;
   gridSize?: string;
-} 
+}
+
+// Export data manipulation types
+export * from './DataManipulationTypes'; 

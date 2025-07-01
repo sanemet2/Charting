@@ -2,9 +2,10 @@ import React, { useRef, useEffect, useMemo } from 'react';
 import Plot from 'react-plotly.js';
 import './ChartStyles.css';
 import ChartSettingsModal from '../components/ChartSettingsModal';
+import DataManipulationModal from '../components/DataManipulationModal';
 import { useChartState, useChartActions, useSimpleResponsive, useLegendCarousel, usePlotlyConfig } from './LineChart/hooks';
 import { ChartLegend } from './LineChart/components';
-import { LineChartProps, DataPoint, Series } from './LineChart/types';
+import { LineChartProps, DataPoint, Series, ManipulationFormData, ModalSeries } from './LineChart/types';
 import { DataSeries } from '../../core/models/DataTypes';
 // import { debug, debugCategories } from './LineChart/utils/debug'; // Temporarily remove all logging
 
@@ -125,6 +126,11 @@ const LineChart: React.FC<LineChartProps> = ({
     setShowManipulation(true);
   };
 
+  const handleManipulationApply = (formData: ManipulationFormData) => {
+    console.log("Data manipulation applied:", formData);
+    // Phase 3 will implement the actual data transformation logic here
+  };
+
   const setSeriesNames = React.useCallback((updater: React.SetStateAction<{ [key: string]: string }>) => {
     const newNames = typeof updater === 'function' ? updater(state.seriesNames) : updater;
     Object.entries(newNames).forEach(([key, name]) => {
@@ -157,6 +163,16 @@ const LineChart: React.FC<LineChartProps> = ({
     }
     return Math.abs(hash);
   }, [gridSize, responsive.responsiveSettings.fontSize, responsive.containerDimensions.width, responsive.containerDimensions.height]);
+
+  // Convert Series[] to ModalSeries[] for the manipulation modal
+  const modalSeries: ModalSeries[] = useMemo(() => 
+    state.processedSeries.map(series => ({
+      id: series.id,
+      name: series.name,
+      dataKey: series.dataKey,
+      color: series.color
+    })), [state.processedSeries]
+  );
 
   // --- 5. Conditional Renders (AFTER ALL HOOKS) ---
   if (!responsive.isDimensionsStable || responsive.containerDimensions.width === 0) {
@@ -288,38 +304,13 @@ const LineChart: React.FC<LineChartProps> = ({
         processedSeries={state.processedSeries}
         seriesNames={state.seriesNames}
       />
-      {showManipulation && (
-        <div style={{
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          background: 'white',
-          border: '1px solid #ccc',
-          borderRadius: '8px',
-          padding: '20px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-          zIndex: 1000
-        }}>
-          <h3>Data Manipulation (Placeholder)</h3>
-          <p>Calculator button is working! 🎉</p>
-          <button onClick={() => setShowManipulation(false)}>Close</button>
-        </div>
-      )}
-      {showManipulation && (
-        <div 
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0, 0, 0, 0.5)',
-            zIndex: 999
-          }}
-          onClick={() => setShowManipulation(false)}
-        />
-      )}
+      <DataManipulationModal
+        isOpen={showManipulation}
+        onClose={() => setShowManipulation(false)}
+        onApply={handleManipulationApply}
+        processedSeries={modalSeries}
+        seriesNames={state.seriesNames}
+      />
     </>
   );
 };

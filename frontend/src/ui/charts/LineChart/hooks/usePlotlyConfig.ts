@@ -261,6 +261,7 @@ export const usePlotlyConfig = ({
         linecolor: '#d1d5db',
         mirror: true,
         tickpadding: 40,
+        tickangle: 0,
       },
       yaxis: {
         title: { 

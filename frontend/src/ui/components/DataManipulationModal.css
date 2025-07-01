@@ -1,0 +1,430 @@
+/* Data Manipulation Modal Styles */
+/* Inherits base modal styles and adds manipulation-specific styling */
+
+/* Use the same modal backdrop and container from ChartSettingsModal */
+.manipulation-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.manipulation-modal-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  width: 90%;
+  max-width: 600px; /* Slightly wider than settings modal for more complex forms */
+  max-height: 90vh;
+  overflow: hidden;
+  z-index: 1001;
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Modal header - same as ChartSettingsModal */
+.manipulation-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.manipulation-modal-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.manipulation-modal-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 4px;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.manipulation-modal-close:hover {
+  background-color: #f3f4f6;
+  color: #1f2937;
+}
+
+/* Modal body */
+.manipulation-modal-body {
+  padding: 24px;
+  max-height: calc(90vh - 140px);
+  overflow-y: auto;
+}
+
+/* Operation sections - Collapsible */
+.operation-section {
+  margin-bottom: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background-color: white;
+  overflow: hidden;
+}
+
+.operation-section:last-child {
+  margin-bottom: 0;
+}
+
+/* Section Header (Clickable) */
+.operation-section-header {
+  padding: 16px 20px;
+  background-color: #f8fafc;
+  border-bottom: 1px solid #e5e7eb;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.operation-section-header:hover {
+  background-color: #f3f4f6;
+}
+
+.operation-section-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.operation-section-header h3::before {
+  content: '';
+  width: 4px;
+  height: 16px;
+  background-color: #6366f1;
+  border-radius: 2px;
+}
+
+/* Chevron Icon */
+.section-chevron {
+  font-size: 14px;
+  color: #6b7280;
+  transition: transform 0.2s ease;
+}
+
+.section-chevron.expanded {
+  transform: rotate(180deg);
+}
+
+/* Section Content (Collapsible) */
+.operation-section-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out;
+}
+
+.operation-section-content.expanded {
+  max-height: 800px; /* Increased for Advanced Formula section */
+}
+
+.operation-section-inner {
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+/* Form groups within sections */
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+.form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+/* Select and input styling */
+.form-select,
+.form-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.2s;
+  font-family: inherit;
+  background-color: white;
+}
+
+.form-select:focus,
+.form-input:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.form-select:disabled,
+.form-input:disabled {
+  background-color: #f3f4f6;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+/* Radio button groups for Lead/Lag direction */
+.radio-group {
+  display: flex;
+  gap: 16px;
+  margin-top: 6px;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #4b5563;
+  line-height: 1.1;
+}
+
+.radio-option input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #6366f1;
+  margin: 0;
+  vertical-align: baseline;
+  position: relative;
+  top: 1px;
+}
+
+.radio-option:hover {
+  color: #1f2937;
+}
+
+/* Number input with unit display */
+.number-with-unit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.number-with-unit .form-input {
+  flex: 1;
+  max-width: 120px;
+}
+
+.unit-label {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* Modal footer - same as ChartSettingsModal */
+.manipulation-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+}
+
+/* Buttons - same as ChartSettingsModal */
+.btn-manipulation-primary,
+.btn-manipulation-secondary {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  font-family: inherit;
+}
+
+.btn-manipulation-primary {
+  background-color: #6366f1;
+  color: white;
+}
+
+.btn-manipulation-primary:hover {
+  background-color: #4f46e5;
+}
+
+.btn-manipulation-primary:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.btn-manipulation-secondary {
+  background-color: white;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+}
+
+.btn-manipulation-secondary:hover {
+  background-color: #f3f4f6;
+  color: #1f2937;
+}
+
+/* Animations - same as ChartSettingsModal */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -45%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* Scrollbar styling */
+.manipulation-modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.manipulation-modal-body::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 4px;
+}
+
+.manipulation-modal-body::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+.manipulation-modal-body::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Formula-specific styles */
+.formula-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: 'Courier New', monospace;
+  background-color: #f8fafc;
+  transition: all 0.2s;
+  min-height: 80px;
+  resize: vertical;
+  margin-bottom: 12px;
+}
+
+.formula-input:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  background-color: white;
+}
+
+.formula-input.error {
+  border-color: #ef4444;
+  background-color: #fef2f2;
+}
+
+.formula-input.valid {
+  border-color: #10b981;
+  background-color: #f0fdf4;
+}
+
+.formula-validation {
+  margin-top: 8px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.formula-validation.valid {
+  color: #059669;
+}
+
+.formula-validation.error {
+  color: #dc2626;
+}
+
+.formula-validation-icon {
+  font-size: 14px;
+}
+
+.formula-help {
+  margin-top: 12px;
+  padding: 12px;
+  background-color: #f3f4f6;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #4b5563;
+}
+
+.formula-help h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.formula-help ul {
+  margin: 4px 0;
+  padding-left: 16px;
+}
+
+.formula-help li {
+  margin-bottom: 2px;
+}
+
+.available-variables {
+  margin-top: 8px;
+  margin-bottom: 16px;
+}
+
+.variables-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.variable-chip {
+  background-color: #e0e7ff;
+  color: #3730a3;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-family: monospace;
+  border: 1px solid #c7d2fe;
+} 
