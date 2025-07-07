@@ -51,7 +51,6 @@ const LineChart: React.FC<LineChartProps> = ({
   });
 
   const [showSettings, setShowSettings] = React.useState(false);
-  const [showManipulation, setShowManipulation] = React.useState(false);
   const [editingTitle, setEditingTitle] = React.useState('');
   
   // --- 3. Effects (MUST BE CALLED UNCONDITIONALLY) ---
@@ -123,11 +122,12 @@ const LineChart: React.FC<LineChartProps> = ({
 
   const handleManipulationClick = () => {
     console.log("Data manipulation clicked!");
-    setShowManipulation(true);
+    actions.setManipulationModal(true);
   };
 
   const handleManipulationApply = (formData: ManipulationFormData) => {
     console.log("Data manipulation applied:", formData);
+    actions.applyManipulation(formData);
     // Phase 3 will implement the actual data transformation logic here
   };
 
@@ -305,8 +305,8 @@ const LineChart: React.FC<LineChartProps> = ({
         seriesNames={state.seriesNames}
       />
       <DataManipulationModal
-        isOpen={showManipulation}
-        onClose={() => setShowManipulation(false)}
+        isOpen={state.showManipulationModal}
+        onClose={() => actions.setManipulationModal(false)}
         onApply={handleManipulationApply}
         processedSeries={modalSeries}
         seriesNames={state.seriesNames}

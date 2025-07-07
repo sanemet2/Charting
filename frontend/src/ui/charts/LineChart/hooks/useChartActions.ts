@@ -2,6 +2,7 @@ import { useCallback, useMemo } from 'react';
 import { DataSeries } from '../../../../core/models/DataTypes';
 import { DataPoint, Series } from '../types';
 import { ChartSettings } from '../../../components/ChartSettingsModal';
+import { ManipulationFormData } from '../types/DataManipulationTypes';
 
 // Action creators hook - provides clean API for updating chart state
 export const useChartActions = (dispatch: React.Dispatch<any>) => {
@@ -70,6 +71,23 @@ export const useChartActions = (dispatch: React.Dispatch<any>) => {
     dispatch({ type: 'SET_SETTINGS', payload: settings });
   }, [dispatch]);
 
+  // Manipulation actions
+  const setManipulationModal = useCallback((show: boolean) => {
+    dispatch({ type: 'SET_MANIPULATION_MODAL', payload: show });
+  }, [dispatch]);
+
+  const applyManipulation = useCallback((operation: ManipulationFormData) => {
+    dispatch({ type: 'APPLY_MANIPULATION', payload: operation });
+  }, [dispatch]);
+
+  const undoLastManipulation = useCallback(() => {
+    dispatch({ type: 'UNDO_MANIPULATION' });
+  }, [dispatch]);
+
+  const resetSeriesToOriginal = useCallback((seriesId: string) => {
+    dispatch({ type: 'RESET_SERIES', payload: seriesId });
+  }, [dispatch]);
+
   return useMemo(() => ({
     // Data actions
     setRawData,
@@ -95,7 +113,13 @@ export const useChartActions = (dispatch: React.Dispatch<any>) => {
     setEditingTitle,
     
     // Settings actions
-    setSettings
+    setSettings,
+    
+    // Manipulation actions
+    setManipulationModal,
+    applyManipulation,
+    undoLastManipulation,
+    resetSeriesToOriginal
   }), [
     dispatch, 
     setRawData, 
@@ -111,6 +135,10 @@ export const useChartActions = (dispatch: React.Dispatch<any>) => {
     nextCarouselPage, 
     setChartTitle, 
     setEditingTitle,
-    setSettings
+    setSettings,
+    setManipulationModal,
+    applyManipulation,
+    undoLastManipulation,
+    resetSeriesToOriginal
   ]);
 }; 

@@ -2,6 +2,7 @@ import { useReducer, useEffect } from 'react';
 import { DataSeries } from '../../../../core/models/DataTypes';
 import { DataPoint, Series } from '../types';
 import { ChartSettings } from '../../../components/ChartSettingsModal';
+import { ManipulationFormData } from '../types/DataManipulationTypes';
 
 // Central state interface
 interface ChartState {
@@ -33,6 +34,11 @@ interface ChartState {
   
   // Settings State
   settings: ChartSettings;
+  
+  // Manipulation State
+  showManipulationModal: boolean;
+  manipulationHistory: ManipulationFormData[];
+  currentOperation: ManipulationFormData | null;
 }
 
 // Action types
@@ -50,7 +56,11 @@ type ChartAction =
   | { type: 'SET_EDITING_TITLE'; payload: boolean }
   | { type: 'SET_SETTINGS'; payload: ChartSettings }
   | { type: 'PROCESS_DATA' }
-  | { type: 'CALCULATE_LEGEND' };
+  | { type: 'CALCULATE_LEGEND' }
+  | { type: 'SET_MANIPULATION_MODAL'; payload: boolean }
+  | { type: 'APPLY_MANIPULATION'; payload: ManipulationFormData }
+  | { type: 'UNDO_MANIPULATION' }
+  | { type: 'RESET_SERIES'; payload: string };
 
 // Initial state
 const initialState: ChartState = {
@@ -74,7 +84,10 @@ const initialState: ChartState = {
     showGrid: true,
     showTooltip: true,
     colors: {}
-  }
+  },
+  showManipulationModal: false,
+  manipulationHistory: [],
+  currentOperation: null
 };
 
 // Pure data processing functions (extracted from hooks)
@@ -295,6 +308,38 @@ const chartReducer = (state: ChartState, action: ChartAction): ChartState => {
       return {
         ...state,
         legendHeight: calculateLegendHeight(state)
+      };
+      
+    case 'SET_MANIPULATION_MODAL':
+      return {
+        ...state,
+        showManipulationModal: action.payload
+      };
+      
+    case 'APPLY_MANIPULATION':
+      return {
+        ...state,
+        manipulationHistory: [...state.manipulationHistory, action.payload],
+        currentOperation: action.payload,
+        showManipulationModal: false
+      };
+      
+    case 'UNDO_MANIPULATION':
+      return {
+        ...state,
+        manipulationHistory: state.manipulationHistory.slice(0, -1),
+        currentOperation: state.manipulationHistory.length > 1 
+          ? state.manipulationHistory[state.manipulationHistory.length - 2] 
+          : null
+      };
+      
+    case 'RESET_SERIES':
+      // TODO: Implement series reset logic in Phase 3
+      return {
+        ...state,
+        manipulationHistory: state.manipulationHistory.filter(
+          op => 'seriesId' in op.parameters ? op.parameters.seriesId !== action.payload : true
+        )
       };
       
     default:
