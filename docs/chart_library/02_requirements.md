@@ -26,7 +26,7 @@
 - Charts can be permanently deleted; folders/sub-folders should not support hard delete in MVP (only allow rename/reorder, or require folders to be emptied before removal if deletion is later introduced).
 
 ## Persistence & Versioning
-- Initial storage can be JSON-on-disk via `service/chart_library.py`, with an abstraction layer ready for database swaps later.
+- Initial storage can be JSON-on-disk via `Program/service/chart_library.py`, with an abstraction layer ready for database swaps later.
 - Snapshots are stored as JSON objects with accompanying `schema_version` (start at 1).
 - Transformation metadata stays embedded alongside each series within `series_store` so legacy charts load even after we add new transform types.
 - Writes should be durable (atomic replace or transactional equivalent) once we move beyond in-memory mocks.
@@ -52,4 +52,7 @@
 ## Development Checklist (AI <-> Human)
 - AI restates the saved-chart schema, hierarchy model, and metadata fields for confirmation.
 - Human resolves outstanding requirements (e.g., persistence scope, naming constraints).
-- AI seeks approval before drafting service/storage interfaces based on these requirements.
+- AI seeks approval before drafting Program/service/storage interfaces based on these requirements.
+
+
+

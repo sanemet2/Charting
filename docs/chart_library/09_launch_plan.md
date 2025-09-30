@@ -9,18 +9,18 @@
 - `AGENTS.md`
 - `README` or project-level documentation (if applicable)
 - `Where We Are At.txt` (milestone updates)
-- Test suite (`tests/`)
+- Test suite (`Diagnostics/tests/`)
 - Release/launch checklist (ad hoc)
 
 ## Key Work Items
 1. Documentation Updates
    - Document new stores, callbacks, and usage instructions in `AGENTS.md`.
    - Add overview of chart library feature, including save/load workflow and known limitations.
-   - Link to planning docs (`docs/chart_library/`) for future maintenance.
+   - Link to planning docs (`Docs/chart_library/`) for future maintenance.
 
 2. Test Coverage Verification
    - Ensure service layer, adapters, and callbacks have unit tests per earlier sections.
-   - Add integration/manual test checklist to repo (e.g., `docs/chart_library/verification_checklist.md`).
+   - Add integration/manual test checklist to repo (e.g., `Docs/chart_library/verification_checklist.md`).
    - Verify all tests pass locally (`pytest`).
 
 3. Linting & Formatting
@@ -42,7 +42,7 @@
 
 ## Outstanding Questions
 - Do we need to produce a screencast or step-by-step tutorial for end users?
-- Should manual verification results be stored in repo (e.g., `docs/chart_library/verification_logs/`)?
+- Should manual verification results be stored in repo (e.g., `Docs/chart_library/verification_logs/`)?
 
 ## Next Steps After Approval
 - Answer outstanding questions and document final decisions here.
@@ -54,3 +54,6 @@
 - AI presents final documentation/testing tasks for sign-off.
 - Human specifies which artifacts (checklist, screenshots, milestone notes) are required before release.
 - AI runs lint/tests, shares results, and awaits explicit approval before closing the feature.
+
+
+

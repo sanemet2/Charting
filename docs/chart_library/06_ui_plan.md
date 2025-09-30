@@ -6,14 +6,14 @@
 - Keep initial UI minimal yet extensible for future features (search, tagging).
 
 ## Target Modules
-- `presentation/layout.py`
-- `presentation/app_dash.py`
-- `presentation/ids.py`
-- `presentation/ui_feedback.py`
+- `Program/presentation/layout.py`
+- `Program/presentation/app_dash.py`
+- `Program/presentation/ids.py`
+- `Program/presentation/ui_feedback.py`
 - Supporting CSS (if any custom styling is required).
 
 ## Key Work Items
-1. Define new component IDs in `presentation/ids.py`:
+1. Define new component IDs in `Program/presentation/ids.py`:
    - `LIBRARY_PANEL_CONTAINER`
    - `LIBRARY_PANEL_TOGGLE_BUTTON`
    - `LIBRARY_FOLDER_TREE`
@@ -23,7 +23,7 @@
    - `LIBRARY_DELETE_BUTTON`
    - `LIBRARY_MOVE_BUTTON`
    - `LIBRARY_FEEDBACK_CONTAINER`
-2. Update layout (`presentation/layout.py`):
+2. Update layout (`Program/presentation/layout.py`):
    - Add a toggle button similar to Fetch/Format panels.
    - Create the panel container with sections for:
      - Folder navigation rendered as a tree view (MVP target).
@@ -61,8 +61,8 @@
 - None currently.
 
 ## Next Steps After Approval
-- Update `presentation/ids.py` with reserved IDs.
-- Extend `presentation/layout.py` to include the new panel structure and placeholder tree view.
+- Update `Program/presentation/ids.py` with reserved IDs.
+- Extend `Program/presentation/layout.py` to include the new panel structure and placeholder tree view.
 - Ensure the panel uses data from stores once callbacks are implemented.
 - Document any TODOs for future enhancements (search bar, tags) inside the panel layout.
 
@@ -70,3 +70,6 @@
 - AI shares a high-level wireframe of tree navigation, chart list, and save form.
 - Human signs off on component IDs, layout sections, and placeholder elements prior to implementation.
 - AI requests styling guidance (inline vs. CSS) before modifying layout.py.
+
+
+

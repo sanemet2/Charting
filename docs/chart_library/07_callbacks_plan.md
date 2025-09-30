@@ -6,10 +6,10 @@
 - Ensure callbacks emit appropriate feedback messages and keep stores in sync incrementally.
 
 ## Target Modules
-- `presentation/app_dash.py`
-- `presentation/library_state.py` (adapters/helpers)
-- `presentation/ui_feedback.py`
-- `service/chart_library.py`
+- `Program/presentation/app_dash.py`
+- `Program/presentation/library_state.py` (adapters/helpers)
+- `Program/presentation/ui_feedback.py`
+- `Program/service/chart_library.py`
 
 ## Key Callback Groups
 1. **Library Load Callback**
@@ -73,10 +73,13 @@
 ## Next Steps After Approval
 - Answer outstanding questions and document decisions in this plan.
 - Implement adapter utilities required by callbacks.
-- Add callback registrations in `presentation/app_dash.py` using the planned flow.
-- Extend tests/manual checklist to cover new interactions.
+- Add callback registrations in `Program/presentation/app_dash.py` using the planned flow.
+- Extend Diagnostics/tests/manual checklist to cover new interactions.
 
 ## Development Checklist (AI <-> Human)
 - AI walks through each callback group with expected inputs/outputs for confirmation.
 - Human validates debounce timing, single-select scope, and feedback destinations before wiring callbacks.
 - AI confirms unit/manual test strategy and receives approval before editing app_dash.py.
+
+
+

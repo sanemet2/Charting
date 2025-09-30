@@ -5,7 +5,7 @@
 - Separate low-level storage (read/write) from higher-level chart library operations so UI callbacks stay backend-agnostic.
 
 ## Proposed Module Layout
-- `service/chart_library.py`
+- `Program/service/chart_library.py`
   - Public API (to be consumed by Dash callbacks):
     - `load_library() -> ChartLibrary`
     - `save_chart(folder_path, snapshot)`
@@ -16,9 +16,9 @@
     - `move_chart(chart_id, new_folder_path)`
     - All methods return domain objects or raise typed exceptions.
   - Internally leverages a storage engine interface to handle actual persistence.
-- `service/chart_library_storage.py`
+- `Program/service/chart_library_storage.py`
   - Defines an interface (Protocol/ABC) with methods `read() -> dict`, `write(payload: dict) -> None`.
-  - JSON implementation backed by a single file (e.g., `data/chart_library.json`).
+  - JSON implementation backed by a single file (e.g., `Program/data/chart_library.json`).
   - In-memory mock for tests.
 
 ## Data Structures
@@ -80,7 +80,7 @@
 - Each chart holds its own `schema_version` so we can migrate snapshots independently.
 
 ## Storage Considerations
-- JSON file path default: `data/chart_library.json` (configurable via env var if needed).
+- JSON file path default: `Program/data/chart_library.json` (configurable via env var if needed).
 - Writes should be atomic: write to temp file, then replace.
 - On load failure (missing file, malformed JSON), fallback to an empty library while surfacing an error message through the UI.
 - Implement basic file locking (or rely on single-writer assumption) to avoid concurrent write corruption.
@@ -91,7 +91,7 @@
 - Validation occurs before write; if invalid data detected, raise without touching disk.
 
 ## Testing Strategy
-- Unit tests for `service/chart_library.py` using the in-memory storage implementation.
+- Unit tests for `Program/service/chart_library.py` using the in-memory storage implementation.
 - JSON storage tests verifying read/write, atomic replace, and schema migration hooks.
 - Include fixtures representing legacy schemas to ensure migrations remain reliable.
 
@@ -106,3 +106,6 @@
 - AI summarizes storage interfaces, schema versioning, and atomic-write plans for sign-off.
 - Human validates file location, logging expectations, and platform caveats (OneDrive, etc.).
 - AI does not proceed until environment-specific guidance is received or explicitly waived.
+
+
+

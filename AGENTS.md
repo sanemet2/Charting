@@ -1,26 +1,26 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `app.py` exposes the Dash entrypoint (`app.server` for WSGI) at repo root.
-- `data/` wraps Bloomberg sessions, mocks, and native-frequency Pandas transformers only.
-- `service/` owns validation/controllers; treat it as the pure orchestration layer for UIs.
-- `presentation/` contains Dash layout, callbacks, and chart utilities; keep component IDs in `presentation/ids.py`.
-- Stage tests under `tests/` mirroring module names and stash large payloads in `tests/fixtures/`.
+- `Program/app.py` exposes the Dash entrypoint (`app.server` for WSGI) and delegates to `Program/presentation/app_dash.py`.
+- `Program/data/` wraps Bloomberg sessions, mocks, and native-frequency Pandas transformers only.
+- `Program/service/` owns validation/controllers; treat it as the pure orchestration layer for UIs.
+- `Program/presentation/` contains Dash layout, callbacks, and chart utilities; keep component IDs in `Program/presentation/ids.py`.
+- Stage tests under `Diagnostics/tests/` mirroring module names and stash large payloads in `Diagnostics/tests/fixtures/`.
 
 ## Build, Test, and Development Commands
-- `python app.py` launches the Dash dev server with hot reload.
-- `python "data/config.py"` reports whether the mock or real Bloomberg stack is active.
-- `python "data/mock_data_fetcher.py"` smoke-tests deterministic sample series generation.
-- `pytest` (once implemented) executes the suite; append `-k <pattern>` to focus on specific modules.
+- `python Program/app.py` launches the Dash dev server with hot reload (logs written to `Diagnostics/logs/`).
+- `python "Program/data/config.py"` reports whether the mock or real Bloomberg stack is active.
+- `python "Program/data/mock_data_fetcher.py"` smoke-tests deterministic sample series generation.
+- `python -m pytest Diagnostics/tests` executes the suite; append `-k <pattern>` to focus on specific modules.
 
 ## Coding Style & Naming Conventions
 - Target Python 3.10+, four-space indents, snake_case for functions/vars, PascalCase for classes, and UPPER_CASE constants.
 - Format with `black` (88 columns) and lint with `ruff`; keep intentional deviations documented inline.
-- Type-annotate public functions and isolate direct Bloomberg calls inside `data/` for testability.
+- Type-annotate public functions and isolate direct Bloomberg calls inside `Program/data/` for testability.
 
 ## Testing Guidelines
-- Use `pytest` with files named `tests/test_<module>.py` and functions `test_<behavior>`.
-- Prefer the mock fetcher (`data.mock_data_fetcher.MockBloombergDataFetcher`) or saved fixtures over live Bloomberg calls.
+- Use `pytest` with files named `Diagnostics/tests/test_<module>.py` (or nested packages) and functions `test_<behavior>`.
+- Prefer the mock fetcher (`Program.data.mock_data_fetcher.MockBloombergDataFetcher`) or saved fixtures over live Bloomberg calls.
 - Cover validators, DataFrame transformers, and series merging logic before UI smoke tests; keep random seeds deterministic.
 
 ## Commit & Pull Request Guidelines

@@ -6,11 +6,11 @@
 - Confirm the UI remains responsive even when operations fail or the library is empty.
 
 ## Target Modules
-- `presentation/ui_feedback.py`
-- `presentation/app_dash.py`
-- `presentation/layout.py`
-- `presentation/library_state.py`
-- `service/chart_library.py`
+- `Program/presentation/ui_feedback.py`
+- `Program/presentation/app_dash.py`
+- `Program/presentation/layout.py`
+- `Program/presentation/library_state.py`
+- `Program/service/chart_library.py`
 
 ## Key Work Items
 1. Feedback Messaging
@@ -68,3 +68,6 @@
 - AI proposes inline + toast messaging patterns with sample copy for review.
 - Human confirms retry expectations, disabled-state rules, and loading indicators before implementation.
 - AI aligns on manual acceptance criteria prior to updating ui_feedback or layout elements.
+
+
+

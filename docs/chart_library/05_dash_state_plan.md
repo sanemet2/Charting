@@ -6,13 +6,13 @@
 - Provide adapters translating between Dash store payloads and `ChartLibrary` domain objects.
 
 ## Target Modules
-- `presentation/layout.py`
-- `presentation/app_dash.py`
-- `presentation/ids.py`
-- New adapters/utilities module (e.g., `presentation/library_state.py`).
+- `Program/presentation/layout.py`
+- `Program/presentation/app_dash.py`
+- `Program/presentation/ids.py`
+- New adapters/utilities module (e.g., `Program/presentation/library_state.py`).
 
 ## Key Work Items
-1. Register new component IDs in `presentation/ids.py`:
+1. Register new component IDs in `Program/presentation/ids.py`:
    - `CHART_LIBRARY_STORE`
    - `ACTIVE_LIBRARY_PATH`
    - (Optional) `LIBRARY_SELECTION_STORE` for multi-selection actions.
@@ -32,8 +32,8 @@
    - Provide helper functions to patch folder/chart nodes deterministically.
 
 ## Testing Plan
-- Add new helper tests (`tests/presentation/test_library_state.py`) covering serialization adapters and incremental update helpers.
-- Extend existing Dash callback tests (if any) to ensure stores hydrate correctly when the service returns data.
+- Add new helper tests (`Diagnostics/tests/Program/presentation/test_library_state.py`) covering serialization adapters and incremental update helpers.
+- Extend existing Dash callback tests (if any) to ensure stores hydrate correctly when the service returns Program.data.
 - Manual verification checklist:
    - Launch Dash, trigger library interactions, inspect browser dev tools for store payload shape and incremental updates.
 
@@ -60,3 +60,6 @@
 - AI presents planned store payload shapes and adapter helpers for alignment.
 - Human confirms preload timing, breadcrumb metadata structure, and incremental update expectations.
 - AI verifies target UI components consuming each store before editing layout or callbacks.
+
+
+
